@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ collection.name }} - ProAgentAstana{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-bookmark-fill text-primary"></i> {{ collection.name }}</h2>
+        <p class="text-muted">{{ total_announcements }} объявлени{{ total_announcements|pluralize:"е,я,й" }} в коллекции</p>
+    </div>
+    <div>
+        <a href="{% url 'collection_list' %}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Назад к коллекциям
+        </a>
+        <a href="{% url 'collection_delete' collection.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash"></i> Удалить коллекцию
+        </a>
+    </div>
+</div>
+
+<!-- Active Announcements Section -->
+{% if active_announcements %}
+    <div class="mb-5">
+        <h4 class="mb-3"><i class="bi bi-house-check text-success"></i> Активные объявления ({{ active_announcements.count }})</h4>
+        <div class="row">
+            {% for announcement in active_announcements %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        {% if announcement.photos.all %}
+                            {% for photo in announcement.photos.all %}
+                                {% if photo.is_main %}
+                                    <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="card-img-top" alt="Фото недвижимости" style="height: 200px; object-fit: cover;">
+                                {% endif %}
+                            {% empty %}
+                                {% if announcement.photos.first %}
+                                    <img src="{{ MEDIA_URL }}{{ announcement.photos.first.file_path }}" class="card-img-top" alt="Фото недвижимости" style="height: 200px; object-fit: cover;">
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ announcement.rooms_count }}-комнатная квартира</h5>
+                            <p class="card-text">
+                                <i class="bi bi-geo-alt"></i> {{ announcement.address.microdistrict }}
+                                {% if announcement.address.complex_name %}, {{ announcement.address.complex_name }}{% endif %}
+                            </p>
+                            <p class="card-text">
+                                <i class="bi bi-rulers"></i> {{ announcement.area }} м²
+                                {% if announcement.floor %}<br><i class="bi bi-building"></i> {{ announcement.floor }}{% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %} этаж{% endif %}
+                            </p>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="text-primary mb-0">
+                                        {{ announcement.price|floatformat:0 }} ₸
+                                    </h4>
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> {{ announcement.user.first_name }}
+                                    </small>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'announcement_detail' announcement.pk %}" class="btn btn-outline-primary flex-fill">
+                                        <i class="bi bi-eye"></i> Смотреть
+                                    </a>
+                                    <button class="btn btn-outline-danger remove-from-collection" 
+                                            data-announcement-id="{{ announcement.pk }}" 
+                                            data-collection-id="{{ collection.pk }}">
+                                        <i class="bi bi-bookmark-dash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+<!-- Archived Announcements Section -->
+{% if archived_announcements %}
+    <div class="mb-5">
+        <h4 class="mb-3"><i class="bi bi-archive text-warning"></i> Архивные объявления ({{ archived_announcements.count }})</h4>
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-info-circle"></i> Эти объявления находятся в архиве и больше не активны.
+        </div>
+        <div class="row">
+            {% for announcement in archived_announcements %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm position-relative" style="opacity: 0.8;">
+                        <!-- Archived Badge -->
+                        <div class="position-absolute top-0 start-0 p-2">
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-archive"></i> Архив
+                            </span>
+                        </div>
+                        
+                        {% if announcement.photos.all %}
+                            {% for photo in announcement.photos.all %}
+                                {% if photo.is_main %}
+                                    <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="card-img-top" alt="Фото недвижимости" style="height: 200px; object-fit: cover; filter: grayscale(20%);">
+                                {% endif %}
+                            {% empty %}
+                                {% if announcement.photos.first %}
+                                    <img src="{{ MEDIA_URL }}{{ announcement.photos.first.file_path }}" class="card-img-top" alt="Фото недвижимости" style="height: 200px; object-fit: cover; filter: grayscale(20%);">
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-muted">{{ announcement.rooms_count }}-комнатная квартира</h5>
+                            <p class="card-text text-muted">
+                                <i class="bi bi-geo-alt"></i> {{ announcement.address.microdistrict }}
+                                {% if announcement.address.complex_name %}, {{ announcement.address.complex_name }}{% endif %}
+                            </p>
+                            <p class="card-text text-muted">
+                                <i class="bi bi-rulers"></i> {{ announcement.area }} м²
+                                {% if announcement.floor %}<br><i class="bi bi-building"></i> {{ announcement.floor }}{% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %} этаж{% endif %}
+                            </p>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="text-muted mb-0">
+                                        {{ announcement.price|floatformat:0 }} ₸
+                                    </h4>
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> {{ announcement.user.first_name }}
+                                    </small>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'announcement_detail' announcement.pk %}" class="btn btn-outline-secondary flex-fill">
+                                        <i class="bi bi-eye"></i> Смотреть
+                                    </a>
+                                    <button class="btn btn-outline-danger remove-from-collection" 
+                                            data-announcement-id="{{ announcement.pk }}" 
+                                            data-collection-id="{{ collection.pk }}">
+                                        <i class="bi bi-bookmark-dash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+<!-- Empty State -->
+{% if not active_announcements and not archived_announcements %}
+    <div class="text-center py-5">
+        <i class="bi bi-bookmark text-muted" style="font-size: 4rem;"></i>
+        <h4 class="mt-3 text-muted">Коллекция пуста</h4>
+        <p class="text-muted">Начните добавлять объявления в эту коллекцию, просматривая доступные предложения.</p>
+        <a href="{% url 'announcement_list' %}" class="btn btn-primary">
+            <i class="bi bi-house"></i> Посмотреть объявления
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Handle remove from collection
+    $('.remove-from-collection').click(function(e) {
+        e.preventDefault();
+        
+        var announcementId = $(this).data('announcement-id');
+        var collectionId = $(this).data('collection-id');
+        var button = $(this);
+        
+        if (confirm('Вы уверены, что хотите удалить это объявление из коллекции?')) {
+            $.ajax({
+                url: '{% url "remove_from_collection" %}',
+                method: 'POST',
+                data: {
+                    'announcement_id': announcementId,
+                    'collection_id': collectionId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Remove the card from the page
+                        button.closest('.col-lg-4').fadeOut(300, function() {
+                            $(this).remove();
+                            
+                            // Check if any announcements are left
+                            if ($('.col-lg-4').length === 0) {
+                                location.reload(); // Reload to show empty state
+                            }
+                        });
+                        
+                        // Show success message
+                        $('<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert">' +
+                          'Объявление удалено из коллекции!' +
+                          '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                          '</div>').appendTo('body');
+                        
+                        // Auto-hide after 3 seconds
+                        setTimeout(function() {
+                            $('.alert').alert('close');
+                        }, 3000);
+                    } else {
+                        alert('Ошибка: ' + data.message);
+                    }
+                },
+                error: function() {
+                    alert('Произошла ошибка при удалении из коллекции.');
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+

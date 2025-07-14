@@ -1,0 +1,750 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация - ProAgentAstana{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-plus text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="mt-2">Присоединяйтесь к ProAgentAstana</h3>
+                    <p class="text-muted">Создайте свой аккаунт агента по недвижимости</p>
+                    <div class="alert alert-success" role="alert">
+                        <i class="bi bi-check-circle"></i>
+                        <strong>Бесплатная регистрация!</strong> Начните работать с недвижимостью прямо сейчас
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> Имя *
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.first_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> Фамилия *
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.last_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">
+                            <i class="bi bi-phone"></i> Номер телефона *
+                        </label>
+                        {{ form.phone }}
+                        <div class="form-text">This will be used for login</div>
+                        {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.phone.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.additional_phone.id_for_label }}" class="form-label">
+                                <i class="bi bi-phone"></i> Дополнительный телефон
+                            </label>
+                            {{ form.additional_phone }}
+                            {% if form.additional_phone.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.additional_phone.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.whatsapp_phone.id_for_label }}" class="form-label">
+                                <i class="bi bi-whatsapp"></i> WhatsApp номер
+                            </label>
+                            {{ form.whatsapp_phone }}
+                            {% if form.whatsapp_phone.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.whatsapp_phone.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            <i class="bi bi-envelope"></i> Почта
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.agency_name.id_for_label }}" class="form-label">
+                            <i class="bi bi-building"></i> Имя агентства *
+                        </label>
+                        <div class="position-relative">
+                            {{ form.agency_name }}
+                            <div id="agency-suggestions" class="agency-suggestions"></div>
+                        </div>
+                        <div class="form-text">{{ form.agency_name.help_text }}</div>
+                        {% if form.agency_name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.agency_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">
+                                <i class="bi bi-lock"></i> Пароль *
+                            </label>
+                            {{ form.password }}
+                            <div class="form-text">Минимум 8 символов</div>
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password_confirm.id_for_label }}" class="form-label">
+                                <i class="bi bi-lock-fill"></i> Подтвердите пароль *
+                            </label>
+                            {{ form.password_confirm }}
+                            {% if form.password_confirm.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.password_confirm.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus"></i> Создать аккаунт
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted">
+                        Уде есть готовый аккаунт? 
+                        <a href="{% url 'login' %}" class="text-decoration-none">
+                            Нажми сюда для входа
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ========================
+    // ВАЛИДАЦИЯ ФОРМЫ РЕГИСТРАЦИИ
+    // ========================
+    
+    const registrationForm = document.querySelector('form');
+    const submitButton = registrationForm.querySelector('button[type="submit"]');
+    
+    // Обязательные поля
+    const requiredFields = {
+        'first_name': 'Имя',
+        'last_name': 'Фамилия', 
+        'phone': 'Основной номер телефона',
+        'agency_name': 'Название агентства',
+        'password': 'Пароль',
+        'password_confirm': 'Подтверждение пароля'
+    };
+    
+    // Функция для показа ошибки поля
+    function showFieldError(fieldName, message) {
+        const field = document.getElementById('id_' + fieldName);
+        if (!field) return;
+        
+        // Добавляем класс ошибки
+        field.classList.add('is-invalid');
+        
+        // Создаем или обновляем сообщение об ошибке
+        let errorDiv = field.parentNode.querySelector('.validation-error');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'validation-error text-danger small mt-1';
+            
+            // Для поля агентства учитываем структуру с position-relative
+            if (fieldName === 'agency_name') {
+                field.parentNode.parentNode.appendChild(errorDiv);
+            } else {
+                field.parentNode.appendChild(errorDiv);
+            }
+        }
+        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + message;
+    }
+    
+    // Функция для скрытия ошибки поля
+    function hideFieldError(fieldName) {
+        const field = document.getElementById('id_' + fieldName);
+        if (!field) return;
+        
+        field.classList.remove('is-invalid');
+        
+        const errorDiv = field.parentNode.querySelector('.validation-error') || 
+                        (fieldName === 'agency_name' ? field.parentNode.parentNode.querySelector('.validation-error') : null);
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+    
+    // Функция для валидации поля
+    function validateField(fieldName, fieldLabel) {
+        const field = document.getElementById('id_' + fieldName);
+        if (!field) return false;
+        
+        const value = field.value.trim();
+        
+        // Проверка на пустоту
+        if (!value) {
+            showFieldError(fieldName, `${fieldLabel} обязательно для заполнения`);
+            return false;
+        }
+        
+        // Специальные проверки
+        switch(fieldName) {
+            case 'first_name':
+            case 'last_name':
+                if (value.length < 2) {
+                    showFieldError(fieldName, `${fieldLabel} должно содержать минимум 2 символа`);
+                    return false;
+                }
+                break;
+                
+            case 'phone':
+                const phoneDigits = value.replace(/\D/g, '');
+                if (!phoneDigits.startsWith('7') || phoneDigits.length !== 11) {
+                    showFieldError(fieldName, 'Введите корректный номер телефона в формате 7(XXX)-XXX-XXXX');
+                    return false;
+                }
+                break;
+                
+            case 'agency_name':
+                if (value.length < 3) {
+                    showFieldError(fieldName, 'Название агентства должно содержать минимум 3 символа');
+                    return false;
+                }
+                break;
+                
+            case 'password':
+                if (value.length < 8) {
+                    showFieldError(fieldName, 'Пароль должен содержать минимум 8 символов');
+                    return false;
+                }
+                break;
+                
+            case 'password_confirm':
+                const passwordField = document.getElementById('id_password');
+                if (passwordField && value !== passwordField.value) {
+                    showFieldError(fieldName, 'Пароли не совпадают');
+                    return false;
+                }
+                break;
+        }
+        
+        hideFieldError(fieldName);
+        return true;
+    }
+    
+    // Функция для валидации всей формы
+    function validateForm() {
+        let isValid = true;
+        
+        // Очищаем предыдущие ошибки
+        Object.keys(requiredFields).forEach(fieldName => {
+            hideFieldError(fieldName);
+        });
+        
+        // Проверяем каждое обязательное поле
+        Object.keys(requiredFields).forEach(fieldName => {
+            const fieldLabel = requiredFields[fieldName];
+            if (!validateField(fieldName, fieldLabel)) {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+    
+    // Функция для показа общего сообщения об ошибке
+    function showFormError(message) {
+        // Удаляем предыдущее сообщение
+        const existingError = document.querySelector('.form-validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Создаем новое сообщение
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'form-validation-error alert alert-danger';
+        errorDiv.innerHTML = `
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Ошибка валидации:</strong> ${message}
+        `;
+        
+        // Вставляем перед кнопкой отправки
+        submitButton.parentNode.insertBefore(errorDiv, submitButton);
+        
+        // Прокручиваем к сообщению
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Обработчик отправки формы
+    registrationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Валидируем форму
+        if (!validateForm()) {
+            showFormError('Пожалуйста, исправьте ошибки в форме перед отправкой');
+            return false;
+        }
+        
+        // Удаляем сообщение об ошибке если оно есть
+        const existingError = document.querySelector('.form-validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Показываем индикатор загрузки
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Создание аккаунта...';
+        submitButton.disabled = true;
+        
+        // Отправляем форму
+        setTimeout(() => {
+            registrationForm.submit();
+        }, 500);
+    });
+    
+    // Валидация полей в реальном времени
+    Object.keys(requiredFields).forEach(fieldName => {
+        const field = document.getElementById('id_' + fieldName);
+        if (field) {
+            field.addEventListener('blur', function() {
+                validateField(fieldName, requiredFields[fieldName]);
+            });
+            
+            field.addEventListener('input', function() {
+                // Скрываем ошибку при начале ввода
+                hideFieldError(fieldName);
+            });
+        }
+    });
+    
+    // ========================
+    // МАСКА ТЕЛЕФОНА (существующий код)
+    // ========================
+    
+    // Функция для применения маски телефона
+    function applyPhoneMask(input) {
+        input.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
+            
+            // Если пользователь начинает вводить не с 7, добавляем 7
+            if (value.length > 0 && !value.startsWith('7')) {
+                if (value.startsWith('8')) {
+                    value = '7' + value.substring(1);
+                } else if (value.startsWith('9')) {
+                    value = '7' + value;
+                } else {
+                    value = '7' + value;
+                }
+            }
+            
+            // Ограничиваем длину до 11 цифр
+            value = value.substring(0, 11);
+            
+            // Применяем маску 7(XXX)-XXX-XXXX
+            let formattedValue = '';
+            if (value.length > 0) {
+                formattedValue = '7';
+                if (value.length > 1) {
+                    formattedValue += '(' + value.substring(1, 4);
+                    if (value.length > 4) {
+                        formattedValue += ')-' + value.substring(4, 7);
+                        if (value.length > 7) {
+                            formattedValue += '-' + value.substring(7, 11);
+                        }
+                    } else if (value.length === 4) {
+                        formattedValue += ')';
+                    }
+                }
+            }
+            
+            e.target.value = formattedValue;
+        });
+        
+        // Обработка клавиши Backspace
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') {
+                const value = e.target.value;
+                const cursorPos = e.target.selectionStart;
+                
+                // Если курсор стоит после специального символа, удаляем цифру перед ним
+                if (cursorPos > 0) {
+                    const charBefore = value[cursorPos - 1];
+                    if (['(', ')', '-'].includes(charBefore)) {
+                        e.preventDefault();
+                        const newValue = value.substring(0, cursorPos - 2) + value.substring(cursorPos);
+                        e.target.value = newValue;
+                        e.target.setSelectionRange(cursorPos - 1, cursorPos - 1);
+                        
+                        // Повторно применяем маску
+                        const event = new Event('input', { bubbles: true });
+                        e.target.dispatchEvent(event);
+                    }
+                }
+            }
+        });
+        
+        // Запрещаем ввод нецифровых символов
+        input.addEventListener('keypress', function(e) {
+            if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Применяем маску ко всем полям с классом phone-mask
+    const phoneInputs = document.querySelectorAll('.phone-mask');
+    phoneInputs.forEach(function(input) {
+        applyPhoneMask(input);
+        
+        // Устанавливаем начальное значение 7 для основного поля телефона
+        if (input.name === 'phone' && input.value === '') {
+            input.value = '7';
+        }
+    });
+});
+</script>
+
+<style>
+.agency-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.agency-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.agency-suggestion:hover {
+    background-color: #f8f9fa;
+}
+
+.agency-suggestion:last-child {
+    border-bottom: none;
+}
+
+.agency-suggestion.active {
+    background-color: #e9ecef;
+}
+
+.agency-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.agency-info {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 2px;
+}
+
+/* ======================== */
+/* СТИЛИ ВАЛИДАЦИИ ФОРМЫ */
+/* ======================== */
+
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.validation-error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875em;
+    color: #dc3545;
+    margin-top: 4px;
+}
+
+.validation-error i {
+    font-size: 0.9em;
+}
+
+.form-validation-error {
+    border-left: 4px solid #dc3545;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    margin-bottom: 1rem;
+}
+
+.form-validation-error i {
+    color: #721c24;
+}
+
+/* Анимация индикатора загрузки */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Плавный переход для полей */
+.form-control, .form-select {
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Успешная валидация */
+.is-valid {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+}
+
+/* Стили для кнопки при загрузке */
+.btn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+/* Улучшенный стиль для сообщений об ошибках */
+.validation-error {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Стили для фокуса на невалидных полях */
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const agencyInput = document.getElementById('id_agency_name');
+    const suggestionsContainer = document.getElementById('agency-suggestions');
+    let currentSuggestions = [];
+    let activeSuggestionIndex = -1;
+    let debounceTimer;
+    
+    // Функция для поиска агентств
+    function searchAgencies(query) {
+        if (query.length < 1) {
+            hideSuggestions();
+            return;
+        }
+        
+        // Очищаем предыдущий таймер
+        clearTimeout(debounceTimer);
+        
+        // Устанавливаем новый таймер для задержки запроса
+        debounceTimer = setTimeout(function() {
+            fetch(`/ajax/agency-autocomplete/?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    currentSuggestions = data.suggestions || [];
+                    showSuggestions();
+                })
+                .catch(error => {
+                    console.error('Error fetching agency suggestions:', error);
+                    hideSuggestions();
+                });
+        }, 300);
+    }
+    
+    // Функция для отображения подсказок
+    function showSuggestions() {
+        suggestionsContainer.innerHTML = '';
+        
+        if (currentSuggestions.length === 0) {
+            hideSuggestions();
+            return;
+        }
+        
+        currentSuggestions.forEach((agency, index) => {
+            const suggestionDiv = document.createElement('div');
+            suggestionDiv.className = 'agency-suggestion';
+            suggestionDiv.innerHTML = `
+                <div class="agency-name">${agency.name}</div>
+                <div class="agency-info">${agency.users_count} агент${agency.users_count === 1 ? '' : agency.users_count < 5 ? 'а' : 'ов'}</div>
+            `;
+            
+            suggestionDiv.addEventListener('click', function() {
+                selectSuggestion(index);
+            });
+            
+            suggestionsContainer.appendChild(suggestionDiv);
+        });
+        
+        suggestionsContainer.style.display = 'block';
+        activeSuggestionIndex = -1;
+    }
+    
+    // Функция для скрытия подсказок
+    function hideSuggestions() {
+        suggestionsContainer.style.display = 'none';
+        activeSuggestionIndex = -1;
+    }
+    
+    // Функция для выбора подсказки
+    function selectSuggestion(index) {
+        if (index >= 0 && index < currentSuggestions.length) {
+            agencyInput.value = currentSuggestions[index].name;
+            hideSuggestions();
+            agencyInput.focus();
+        }
+    }
+    
+    // Функция для навигации по подсказкам
+    function navigateSuggestions(direction) {
+        if (currentSuggestions.length === 0) return;
+        
+        const suggestions = suggestionsContainer.querySelectorAll('.agency-suggestion');
+        
+        // Убираем активный класс с предыдущего элемента
+        if (activeSuggestionIndex >= 0) {
+            suggestions[activeSuggestionIndex].classList.remove('active');
+        }
+        
+        // Обновляем индекс
+        if (direction === 'down') {
+            activeSuggestionIndex = (activeSuggestionIndex + 1) % currentSuggestions.length;
+        } else {
+            activeSuggestionIndex = activeSuggestionIndex <= 0 ? currentSuggestions.length - 1 : activeSuggestionIndex - 1;
+        }
+        
+        // Добавляем активный класс к новому элементу
+        suggestions[activeSuggestionIndex].classList.add('active');
+        
+        // Скролим к активному элементу
+        suggestions[activeSuggestionIndex].scrollIntoView({ 
+            block: 'nearest', 
+            behavior: 'smooth' 
+        });
+    }
+    
+    // Обработчики событий для поля ввода
+    agencyInput.addEventListener('input', function() {
+        searchAgencies(this.value);
+    });
+    
+    agencyInput.addEventListener('keydown', function(e) {
+        if (suggestionsContainer.style.display === 'block') {
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    navigateSuggestions('down');
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    navigateSuggestions('up');
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (activeSuggestionIndex >= 0) {
+                        selectSuggestion(activeSuggestionIndex);
+                    }
+                    break;
+                case 'Escape':
+                    hideSuggestions();
+                    break;
+            }
+        }
+    });
+    
+    // Скрываем подсказки при клике вне элемента
+    document.addEventListener('click', function(e) {
+        if (!agencyInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+    
+    // Показываем подсказки при фокусе, если есть текст
+    agencyInput.addEventListener('focus', function() {
+        if (this.value.length >= 1) {
+            searchAgencies(this.value);
+        }
+    });
+});
+</script>
+{% endblock %}
+

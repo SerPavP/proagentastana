@@ -1,0 +1,1288 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Редактирование объявления{% else %}Создание объявления{% endif %} - ProAgentAstana
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.announcement-form .card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.announcement-form .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.announcement-form .photo-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.announcement-form .photo-upload-area:hover {
+    border-color: #007bff;
+    background: #e3f2fd;
+}
+
+.announcement-form .form-control, 
+.announcement-form .form-select {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+}
+
+.announcement-form .form-control:focus,
+.announcement-form .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.commission-section .form-check-label {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.commission-section .form-control {
+    margin: 0 5px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+.photo-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.photo-wrapper:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+
+.delete-photo-btn {
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+    border-radius: 50% !important;
+    font-size: 12px;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.delete-photo-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.photo-item img {
+    transition: all 0.2s ease;
+}
+
+.photo-item:hover img {
+    filter: brightness(0.9);
+}
+
+.set-main-btn {
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+    border-radius: 4px !important;
+    font-size: 10px;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    white-space: nowrap;
+}
+
+.set-main-btn:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Landmarks Tags Styles */
+.landmarks-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fafbfc;
+}
+
+.landmark-tag-wrapper {
+    position: relative;
+}
+
+.landmark-tag-wrapper input[type="checkbox"] {
+    display: none;
+}
+
+.landmark-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 20px;
+    background: white;
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.landmark-tag:hover {
+    border-color: #007bff;
+    color: #007bff;
+    background-color: #f8f9ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+}
+
+.landmark-tag.active {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.landmark-tag-icon {
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.2s ease;
+    font-size: 10px;
+}
+
+.landmark-tag.active .landmark-tag-icon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.landmark-tag-text {
+    transition: all 0.2s ease;
+}
+
+.landmarks-tags::-webkit-scrollbar {
+    width: 6px;
+}
+
+.landmarks-tags::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.landmarks-tags::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.landmarks-tags::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Автодополнение для жилых комплексов */
+.complex-autocomplete-container {
+    position: relative;
+}
+
+.complex-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.complex-suggestion {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    font-size: 14px;
+    color: #333;
+}
+
+.complex-suggestion:hover {
+    background-color: #f8f9fa;
+}
+
+.complex-suggestion:last-child {
+    border-bottom: none;
+}
+
+.complex-suggestion.active {
+    background-color: #007bff;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid announcement-form">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4 text-center" style="color: #333; font-weight: 600;">Создание/редактирование объявления</h2>
+        </div>
+    </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+            <!-- Левая колонка - основные поля -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Основная информация -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Количество комнат</label>
+                            {{ form.rooms_count }}
+                            {% if form.rooms_count.errors %}
+                                    <div class="text-danger small">{{ form.rooms_count.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Цена <span class="text-muted">тенге</span></label>
+                                <div class="input-group">
+                            {{ form.price }}
+                                    <span class="input-group-text">₸</span>
+                                </div>
+                                {% if form.price.errors %}
+                                    <div class="text-danger small">{{ form.price.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Ремонт</label>
+                            {{ form.repair_status }}
+                            {% if form.repair_status.errors %}
+                                    <div class="text-danger small">{{ form.repair_status.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Тип дома</label>
+                            {{ form.building_type }}
+                            {% if form.building_type.errors %}
+                                    <div class="text-danger small">{{ form.building_type.errors.0 }}</div>
+                                {% endif %}
+                                </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Год постройки <span class="text-muted">(сдачи в эксплуатацию)</span></label>
+                            {{ form.year_built }}
+                            {% if form.year_built.errors %}
+                                    <div class="text-danger small">{{ form.year_built.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    {{ form.is_new_building }}
+                                    <label class="form-check-label" for="{{ form.is_new_building.id_for_label }}">
+                                        <span style="color: #e91e63;">Новостройка</span><br>
+                                        <small class="text-muted">(дом еще не сдан)</small>
+                                    </label>
+                                </div>
+                        </div>
+                    </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Этаж</label>
+                            {{ form.floor }}
+                            {% if form.floor.errors %}
+                                    <div class="text-danger small">{{ form.floor.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                            <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                <span class="fw-bold">из</span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Всего этажей</label>
+                            {{ form.total_floors }}
+                            {% if form.total_floors.errors %}
+                                    <div class="text-danger small">{{ form.total_floors.errors.0 }}</div>
+                                {% endif %}
+                                </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Площадь <span class="text-muted">м²</span></label>
+                                {{ form.area }}
+                                {% if form.area.errors %}
+                                    <div class="text-danger small">{{ form.area.errors.0 }}</div>
+                                {% endif %}
+                        </div>
+                    </div>
+
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Микрорайон</label>
+                            {{ form.microdistrict }}
+                            {% if form.microdistrict.errors %}
+                                    <div class="text-danger small">{{ form.microdistrict.errors.0 }}</div>
+                                {% endif %}
+                                </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Жилой комплекс</label>
+                                <div class="complex-autocomplete-container">
+                                    {{ form.complex_name }}
+                                    <div class="complex-suggestions" id="complex-suggestions"></div>
+                                </div>
+                                {% if form.complex_name.errors %}
+                                    <div class="text-danger small">{{ form.complex_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Улица</label>
+                            {{ form.street }}
+                            {% if form.street.errors %}
+                                    <div class="text-danger small">{{ form.street.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Номер дома</label>
+                            {{ form.building_no }}
+                            {% if form.building_no.errors %}
+                                    <div class="text-danger small">{{ form.building_no.errors.0 }}</div>
+                                {% endif %}
+                                </div>
+                        </div>
+
+
+                    </div>
+                </div>
+                                </div>
+
+            <!-- Правая колонка - фото и описание -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Ссылка на Krisha.kz -->
+                        <div class="mb-4">
+                            <label class="form-label">Ссылка на объявление Krisha.kz</label>
+                            {{ form.krisha_link }}
+                            {% if form.krisha_link.errors %}
+                                <div class="text-danger small">{{ form.krisha_link.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Фото -->
+                        <div class="mb-4">
+                            <label class="form-label">Добавить фото <span style="color: #e91e63;">(обязательно добавьте от 4 до 10 фотографий)</span></label>
+                            
+                            <!-- Кнопка добавления фото -->
+                    <div class="mb-3">
+                                <button type="button" class="btn btn-outline-primary" id="addPhotoBtn">
+                                    <i class="bi bi-plus-circle"></i> Добавить фото
+                                </button>
+                                <input type="file" id="photoInput" name="photos" accept="image/*" multiple style="display: none;">
+                    </div>
+
+                            <!-- Контейнер для отображения загруженных фото -->
+                            <div id="photoContainer" class="row mb-3">
+                                <!-- Фото будут добавляться сюда динамически -->
+                    </div>
+
+                            <!-- Показать существующие фото для редактирования -->
+                    {% if object and object.photos.all %}
+                                <div class="mb-3">
+                                    <h6>Текущие фотографии</h6>
+                                    <div class="row" id="existingPhotos">
+                                {% for photo in object.photos.all %}
+                                            <div class="col-3 mb-2 photo-item" data-photo-id="{{ photo.id }}">
+                                                <div class="position-relative photo-wrapper">
+                                                    <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="img-thumbnail w-100 photo-preview" alt="Property photo" style="height: 150px; object-fit: cover; cursor: pointer;" data-full-src="{{ MEDIA_URL }}{{ photo.file_path }}">
+                                            {% if photo.is_main %}
+                                                        <span class="position-absolute top-0 start-0 badge bg-primary">Главное</span>
+                                            {% endif %}
+                                                    <button type="button" class="btn btn-danger btn-sm position-absolute delete-photo-btn" style="top: 5px; right: 5px; width: 25px; height: 25px; padding: 0; display: none;">
+                                                        <i class="bi bi-x" style="font-size: 0.8rem;"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-success btn-sm position-absolute set-main-btn" style="bottom: 5px; left: 5px; font-size: 0.7rem; padding: 2px 6px; display: none;">
+                                                        Главное
+                                                    </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                            
+                            <!-- Скрытое поле для отправки новых фото -->
+                            <input type="hidden" name="photos_data" id="photosData">
+                        </div>
+
+                        <!-- Описание -->
+                        <div class="mb-4">
+                            <label class="form-label">Добавить описание</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Опорные точки -->
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.landmarks.label }}</label>
+                            <div class="landmarks-tags">
+                                {% for choice in form.landmarks %}
+                                    <div class="landmark-tag-wrapper">
+                                        {{ choice.tag }}
+                                        <button type="button" class="landmark-tag" data-checkbox="{{ choice.id_for_label }}">
+                                            <span class="landmark-tag-text">{{ choice.choice_label }}</span>
+                                            <i class="landmark-tag-icon bi bi-check"></i>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.landmarks.errors %}
+                                <div class="text-danger small">{{ form.landmarks.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Комиссия -->
+                        <div class="mb-4">
+                            <h6 class="mt-4 mb-3">Как я делюсь комиссией <span class="text-muted">(нужно выбрать один из 3 вариантов)</span></h6>
+                            
+                            <div class="commission-section">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="commission_type" id="commission1" value="seller">
+                                    <label class="form-check-label" for="commission1">
+                                        <span style="color: #e91e63;">Я беру с продавца, вы берете с покупателя</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="commission_type" id="commission2" value="split">
+                                    <label class="form-check-label" for="commission2">
+                                        <span style="color: #e91e63;">Я беру с продавца и</span>
+                                        {{ form.commission_amount }}
+                                        <span style="color: #e91e63;">тенге с покупателя. Остальное ваше</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="commission_type" id="commission3" value="buyer">
+                                    <label class="form-check-label" for="commission3">
+                                        <span style="color: #e91e63;">Я беру с продавца, вы - с покупателя и я дополнительно доплачиваю вам</span>
+                                        {{ form.commission_bonus }}
+                                        <span style="color: #e91e63;">тенге</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Кнопки -->
+                        <div class="d-flex gap-2 justify-content-between">
+                            <button type="submit" class="btn btn-primary px-4" name="_publish" onclick="return validateForm()">
+                                <i class="bi bi-upload"></i> Опубликовать
+                            </button>
+                            <button type="submit" class="btn btn-secondary px-4" name="_archive" onclick="return validateForm()">
+                                <i class="bi bi-archive"></i> Поместить в архив
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Скрытые поля -->
+        <div style="display: none;">
+            {{ form.latitude }}
+            {{ form.longitude }}
+        </div>
+
+                    {% if form.non_field_errors %}
+            <div class="alert alert-danger mt-3">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+    </form>
+</div>
+
+<script>
+// Добавляем иконки Bootstrap если их нет
+if (!document.querySelector('link[href*="bootstrap-icons"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css';
+    document.head.appendChild(link);
+}
+
+// Форматирование цены с разделителями тысяч
+function formatPrice(input) {
+    // Получаем только цифры
+    let value = input.value.replace(/\D/g, '');
+    
+    // Если пустое значение, оставляем как есть
+    if (!value) {
+        input.value = '';
+        return;
+    }
+    
+    // Ограничиваем длину до разумного количества цифр (15 цифр - это триллионы)
+    if (value.length > 15) {
+        value = value.substring(0, 15);
+    }
+    
+    // Добавляем разделители тысяч
+    let formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    
+    // Устанавливаем отформатированное значение
+    input.value = formattedValue;
+}
+
+// Функция для получения числового значения из отформатированной строки
+function getNumericValue(formattedValue) {
+    return formattedValue.replace(/\./g, '');
+}
+
+// Валидация формы
+function validateForm() {
+    // Проверяем выбор комиссии
+    const commissionRadios = document.querySelectorAll('input[name="commission_type"]');
+    let commissionSelected = false;
+    
+    for (let radio of commissionRadios) {
+        if (radio.checked) {
+            commissionSelected = true;
+            break;
+        }
+    }
+    
+    if (!commissionSelected) {
+        alert('Пожалуйста, выберите один из вариантов деления комиссии');
+        document.querySelector('input[name="commission_type"]').scrollIntoView({ behavior: 'smooth' });
+        return false;
+    }
+    
+    return true;
+}
+
+// Управление фотографиями
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Устанавливаем правильное значение для радиокнопок commission_type при редактировании
+    {% if form.instance.pk and form.instance.commission_type %}
+    const commissionTypeValue = '{{ form.instance.commission_type }}';
+    const commissionRadio = document.querySelector(`input[name="commission_type"][value="${commissionTypeValue}"]`);
+    if (commissionRadio) {
+        commissionRadio.checked = true;
+    }
+    {% endif %}
+    
+    // Обработка поля цены
+    const priceInput = document.querySelector('input[name="price"]');
+    if (priceInput) {
+        // Форматируем существующее значение при загрузке
+        if (priceInput.value) {
+            formatPrice(priceInput);
+        }
+        
+        // Форматируем при вводе
+        priceInput.addEventListener('input', function() {
+            formatPrice(this);
+        });
+        
+        // Перед отправкой формы убираем форматирование
+        const form = priceInput.closest('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                priceInput.value = getNumericValue(priceInput.value);
+            });
+        }
+    }
+    const addPhotoBtn = document.getElementById('addPhotoBtn');
+    const photoInput = document.getElementById('photoInput');
+    const photoContainer = document.getElementById('photoContainer');
+    const photosData = document.getElementById('photosData');
+    
+    let photoFiles = []; // Массив для хранения выбранных файлов
+    let photoCounter = 0;
+
+    // Кнопка добавления фото
+    addPhotoBtn.addEventListener('click', function() {
+        photoInput.click();
+    });
+
+    // Обработка выбора файлов
+    photoInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        
+        files.forEach(file => {
+            if (file.type.startsWith('image/')) {
+                photoFiles.push(file);
+                displayPhoto(file, photoCounter++);
+            }
+        });
+        
+        updatePhotosData();
+        // Очищаем исходный input после создания скрытых input'ов
+        photoInput.value = '';
+    });
+
+    // Отображение фото
+    function displayPhoto(file, index) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const photoDiv = document.createElement('div');
+            photoDiv.className = 'col-3 mb-2 photo-item';
+            photoDiv.setAttribute('data-index', index);
+            
+            // Создаем скрытый input для этого файла
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'file';
+            hiddenInput.name = 'photos';
+            hiddenInput.style.display = 'none';
+            hiddenInput.files = createFileList([file]);
+            
+            photoDiv.innerHTML = `
+                <div class="position-relative photo-wrapper">
+                    <img src="${e.target.result}" class="img-thumbnail w-100 photo-preview" alt="Новое фото" style="height: 150px; object-fit: cover; cursor: pointer;" data-full-src="${e.target.result}">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute delete-photo-btn" style="top: 5px; right: 5px; width: 25px; height: 25px; padding: 0; display: none;">
+                        <i class="bi bi-x" style="font-size: 0.8rem;"></i>
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm position-absolute set-main-btn" style="bottom: 5px; left: 5px; font-size: 0.7rem; padding: 2px 6px; display: none;">
+                        Главное
+                        </button>
+                </div>
+            `;
+            
+            // Добавляем скрытый input к элементу
+            photoDiv.appendChild(hiddenInput);
+            photoContainer.appendChild(photoDiv);
+            
+            // Добавляем обработчики hover для новых фото
+            addHoverEvents(photoDiv);
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // Функция для создания FileList из массива файлов
+    function createFileList(files) {
+        const dt = new DataTransfer();
+        files.forEach(file => dt.items.add(file));
+        return dt.files;
+    }
+
+    // Обновление скрытого поля с данными фото
+    function updatePhotosData() {
+        const fileNames = photoFiles.map(file => file.name);
+        photosData.value = JSON.stringify(fileNames);
+    }
+
+    // Удаление фото
+    function removePhoto(element, index) {
+        // Удаляем файл из массива
+        photoFiles = photoFiles.filter((file, i) => i !== index);
+        
+        // Удаляем элемент из DOM (включая скрытый input)
+        element.remove();
+        
+        // Обновляем данные
+        updatePhotosData();
+    }
+
+    // Добавление hover эффектов
+    function addHoverEvents(photoElement) {
+        const deleteBtn = photoElement.querySelector('.delete-photo-btn');
+        const setMainBtn = photoElement.querySelector('.set-main-btn');
+        const wrapper = photoElement.querySelector('.photo-wrapper');
+        
+        wrapper.addEventListener('mouseenter', function() {
+            deleteBtn.style.display = 'block';
+            if (setMainBtn && !photoElement.querySelector('.badge')) {
+                setMainBtn.style.display = 'block';
+            }
+        });
+        
+        wrapper.addEventListener('mouseleave', function() {
+            deleteBtn.style.display = 'none';
+            if (setMainBtn) {
+                setMainBtn.style.display = 'none';
+            }
+        });
+        
+        deleteBtn.addEventListener('click', function() {
+            const index = parseInt(photoElement.getAttribute('data-index'));
+            removePhoto(photoElement, index);
+        });
+        
+        if (setMainBtn) {
+            setMainBtn.addEventListener('click', function() {
+                setMainPhoto(photoElement);
+            });
+        }
+    }
+    
+    // Установка главного фото
+    function setMainPhoto(photoElement) {
+        // Убираем отметку "Главное" со всех фото
+        document.querySelectorAll('.photo-item .badge').forEach(badge => {
+            badge.remove();
+        });
+        
+        // Скрываем все кнопки "Главное"
+        document.querySelectorAll('.set-main-btn').forEach(btn => {
+            btn.style.display = 'none';
+        });
+        
+        // Добавляем бейдж "Главное" к выбранному фото
+        const wrapper = photoElement.querySelector('.photo-wrapper');
+        const badge = document.createElement('span');
+        badge.className = 'position-absolute top-0 start-0 badge bg-primary';
+        badge.textContent = 'Главное';
+        wrapper.appendChild(badge);
+        
+        // Добавляем скрытое поле для указания главного фото
+        const existingMainInput = document.querySelector('input[name="main_photo_id"]');
+        if (existingMainInput) {
+            existingMainInput.remove();
+        }
+        
+        const mainPhotoInput = document.createElement('input');
+        mainPhotoInput.type = 'hidden';
+        mainPhotoInput.name = 'main_photo_id';
+        
+        // Для существующих фото используем photo_id, для новых - index
+        const photoId = photoElement.getAttribute('data-photo-id');
+        const photoIndex = photoElement.getAttribute('data-index');
+        mainPhotoInput.value = photoId || `new_${photoIndex}`;
+        
+        document.querySelector('form').appendChild(mainPhotoInput);
+    }
+
+    // Добавляем hover эффекты для существующих фото
+    document.querySelectorAll('.photo-item').forEach(function(photoElement) {
+        addHoverEvents(photoElement);
+        
+        // Для существующих фото другая логика удаления
+        const deleteBtn = photoElement.querySelector('.delete-photo-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                const photoId = photoElement.getAttribute('data-photo-id');
+                if (photoId) {
+                    // Для существующих фото - скрываем и помечаем для удаления
+                    photoElement.style.opacity = '0.5';
+                    photoElement.innerHTML += '<input type="hidden" name="delete_photos[]" value="' + photoId + '">';
+                    deleteBtn.style.display = 'none';
+                } else {
+                    // Для новых фото - удаляем сразу
+                    const index = parseInt(photoElement.getAttribute('data-index'));
+                    removePhoto(photoElement, index);
+                }
+            });
+        }
+    });
+    
+    // Обработка кликов по фото для увеличенного просмотра
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('photo-preview')) {
+            const fullSrc = e.target.getAttribute('data-full-src') || e.target.src;
+            
+            const modalPhoto = document.getElementById('modalPhoto');
+            modalPhoto.src = fullSrc;
+            
+            const photoModal = new bootstrap.Modal(document.getElementById('photoModal'));
+            photoModal.show();
+        }
+    });
+});
+</script>
+
+<!-- Модальное окно для просмотра фото -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 p-2">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalPhoto" src="" alt="Увеличенное фото" class="img-fluid" style="max-height: 80vh; max-width: 100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Валидация формы перед отправкой
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const publishBtn = document.querySelector('button[name="_publish"]');
+    const archiveBtn = document.querySelector('button[name="_archive"]');
+    
+    // Функция для проверки обязательных полей
+    function validateRequiredFields() {
+        const requiredFields = [
+            'rooms_count',
+            'price',
+            'repair_status',
+            'building_type',
+            'year_built',
+            'floor',
+            'total_floors',
+            'area',
+            'microdistrict',
+            'street',
+            'building_no',
+            'description'
+        ];
+        
+        let allValid = true;
+        
+        requiredFields.forEach(fieldName => {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                const value = field.value.trim();
+                if (!value || value === '' || value === 'Выберите тип дома' || value === 'Выберите микрорайон' || value === 'Выберите состояние ремонта') {
+                    field.classList.add('is-invalid');
+                    allValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            }
+        });
+        
+        return allValid;
+    }
+    
+    // Функция для проверки количества фото (минимум 4)
+    function validatePhotos() {
+        const existingPhotos = document.querySelectorAll('.photo-item:not([style*="opacity: 0.5"])').length;
+        const newPhotos = (typeof photoFiles !== 'undefined' && photoFiles) ? photoFiles.length : 0;
+        const totalPhotos = existingPhotos + newPhotos;
+        
+        const photoError = document.getElementById('photoError');
+        if (photoError) {
+            photoError.remove();
+        }
+        
+        if (totalPhotos < 4) {
+            const photoContainer = document.getElementById('photoContainer');
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'photoError';
+            errorDiv.className = 'alert alert-danger mt-2';
+            errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Необходимо минимум 4 фотографии';
+            photoContainer.parentNode.insertBefore(errorDiv, photoContainer.nextSibling);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Функция для проверки выбора типа комиссии
+    function validateCommission() {
+        const commissionRadios = document.querySelectorAll('input[name="commission_type"]');
+        let isSelected = false;
+        
+        commissionRadios.forEach(radio => {
+            if (radio.checked) {
+                isSelected = true;
+            }
+        });
+        
+        const commissionError = document.getElementById('commissionError');
+        if (commissionError) {
+            commissionError.remove();
+        }
+        
+        if (!isSelected) {
+            const commissionSection = document.querySelector('.commission-section');
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'commissionError';
+            errorDiv.className = 'alert alert-danger mt-2';
+            errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Необходимо выбрать тип комиссии';
+            commissionSection.parentNode.insertBefore(errorDiv, commissionSection.nextSibling);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Функция для обновления состояния кнопок (без валидации полей)
+    function updateButtonState() {
+        // Просто проверяем, есть ли фотографии и выбран ли тип комиссии, но не подсвечиваем поля
+        const existingPhotos = document.querySelectorAll('.photo-item:not([style*="opacity: 0.5"])').length;
+        const newPhotos = (typeof photoFiles !== 'undefined' && photoFiles) ? photoFiles.length : 0;
+        const totalPhotos = existingPhotos + newPhotos;
+        
+        const commissionSelected = document.querySelector('input[name="commission_type"]:checked') !== null;
+        
+        // Считаем заполненные обязательные поля
+        const requiredFields = [
+            'rooms_count', 'price', 'repair_status', 'building_type', 'year_built', 
+            'floor', 'total_floors', 'area', 'microdistrict', 'street', 'building_no', 'description'
+        ];
+        
+        let filledFields = 0;
+        requiredFields.forEach(fieldName => {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                const value = field.value.trim();
+                if (value && value !== '' && value !== 'Выберите тип дома' && value !== 'Выберите микрорайон' && value !== 'Выберите состояние ремонта') {
+                    filledFields++;
+                }
+            }
+        });
+        
+        const allFieldsFilled = filledFields === requiredFields.length;
+        const allValid = allFieldsFilled && totalPhotos >= 4 && commissionSelected;
+        
+        // Обновляем кнопки без подсветки полей
+        if (publishBtn) {
+            publishBtn.disabled = !allValid;
+            publishBtn.classList.toggle('btn-secondary', !allValid);
+            publishBtn.classList.toggle('btn-primary', allValid);
+        }
+        
+        if (archiveBtn) {
+            archiveBtn.disabled = !allValid;
+            archiveBtn.classList.toggle('btn-outline-secondary', !allValid);
+            archiveBtn.classList.toggle('btn-secondary', allValid);
+        }
+        
+        // Убираем общее сообщение об ошибке (показываем только при попытке отправить)
+        const generalError = document.getElementById('generalError');
+        if (generalError) {
+            generalError.remove();
+        }
+    }
+    
+    // Функция для полной валидации (вызывается только при попытке отправить форму)
+    function validateForm() {
+        const fieldsValid = validateRequiredFields();
+        const photosValid = validatePhotos();
+        const commissionValid = validateCommission();
+        
+        const allValid = fieldsValid && photosValid && commissionValid;
+        
+        // Показываем общее сообщение об ошибке только при валидации
+        const generalError = document.getElementById('generalError');
+        if (generalError) {
+            generalError.remove();
+        }
+        
+        if (!allValid) {
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'generalError';
+            errorDiv.className = 'alert alert-warning mt-3';
+            errorDiv.innerHTML = '<i class="bi bi-info-circle"></i> Заполните все обязательные поля, добавьте минимум 4 фотографии и выберите тип комиссии для публикации объявления';
+            form.appendChild(errorDiv);
+        }
+        
+        return allValid;
+    }
+    
+    // Добавляем обработчики событий для всех полей (только обновление состояния кнопок)
+    const allInputs = form.querySelectorAll('input, select, textarea');
+    allInputs.forEach(input => {
+        input.addEventListener('input', updateButtonState);
+        input.addEventListener('change', updateButtonState);
+        // Убираем blur validation - валидация будет только при попытке отправить
+    });
+    
+    // Добавляем обработчики для радиокнопок комиссии
+    const commissionRadios = document.querySelectorAll('input[name="commission_type"]');
+    commissionRadios.forEach(radio => {
+        radio.addEventListener('change', updateButtonState);
+    });
+    
+    // Добавляем обработчики для кнопок - валидация при нажатии
+    if (publishBtn) {
+        publishBtn.addEventListener('click', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                // Прокручиваем к первой ошибке
+                const firstError = document.querySelector('.is-invalid, .alert-danger');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+        });
+    }
+    
+    if (archiveBtn) {
+        archiveBtn.addEventListener('click', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                // Прокручиваем к первой ошибке
+                const firstError = document.querySelector('.is-invalid, .alert-danger');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+        });
+    }
+    
+    // Переопределяем функцию displayPhoto для учета валидации
+    if (typeof displayPhoto !== 'undefined') {
+        const originalDisplayPhoto = displayPhoto;
+        displayPhoto = function(file, index) {
+            originalDisplayPhoto(file, index);
+            setTimeout(updateButtonState, 100); // Даем время для обновления DOM
+        };
+    }
+    
+    // Переопределяем функцию removePhoto для учета валидации
+    if (typeof removePhoto !== 'undefined') {
+        const originalRemovePhoto = removePhoto;
+        removePhoto = function(photoElement, index) {
+            originalRemovePhoto(photoElement, index);
+            setTimeout(updateButtonState, 100);
+        };
+    }
+    
+    // Добавляем обработчики для добавления и удаления фото
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-photo-btn')) {
+            setTimeout(updateButtonState, 100);
+        }
+    });
+    
+    // Обработчик для input файлов
+    const photoInput = document.getElementById('photoInput');
+    if (photoInput) {
+        photoInput.addEventListener('change', function() {
+            setTimeout(updateButtonState, 100);
+        });
+    }
+    
+    // Первоначальное обновление состояния кнопок (без валидации)
+    setTimeout(updateButtonState, 500);
+    
+    // Предотвращаем отправку формы если валидация не пройдена
+    form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            
+            // Прокручиваем к первой ошибке
+            const firstError = document.querySelector('.is-invalid, .alert-danger');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            return false;
+        }
+    });
+    
+    // Landmark Tags Functionality
+    document.querySelectorAll('.landmark-tag').forEach(function(button) {
+        const checkboxId = button.getAttribute('data-checkbox');
+        const checkbox = document.getElementById(checkboxId);
+        
+        // Синхронизируем начальное состояние
+        if (checkbox.checked) {
+            button.classList.add('active');
+        }
+        
+        button.addEventListener('click', function() {
+            checkbox.checked = !checkbox.checked;
+            button.classList.toggle('active', checkbox.checked);
+            
+            // Обновляем состояние кнопок для валидации
+            setTimeout(updateButtonState, 100);
+        });
+    });
+    
+    // Автодополнение для жилых комплексов
+    initComplexAutocomplete();
+});
+
+// Функция для инициализации автодополнения жилых комплексов
+function initComplexAutocomplete() {
+    const complexInput = document.querySelector('.complex-autocomplete');
+    const suggestionsDiv = document.getElementById('complex-suggestions');
+    
+    if (!complexInput || !suggestionsDiv) return;
+    
+    let currentSuggestions = [];
+    let selectedIndex = -1;
+    
+    // Дебаунс для запросов
+    let debounceTimer;
+    
+    complexInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const query = this.value.trim();
+            if (query.length >= 1) {
+                fetchComplexSuggestions(query);
+            } else {
+                hideSuggestions();
+            }
+        }, 300);
+    });
+    
+    complexInput.addEventListener('keydown', function(e) {
+        if (!suggestionsDiv.style.display || suggestionsDiv.style.display === 'none') {
+            return;
+        }
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, currentSuggestions.length - 1);
+                updateSelectedSuggestion();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                updateSelectedSuggestion();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selectedIndex >= 0) {
+                    selectSuggestion(currentSuggestions[selectedIndex]);
+                }
+                break;
+            case 'Escape':
+                hideSuggestions();
+                break;
+        }
+    });
+    
+    // Скрыть подсказки при клике вне поля
+    document.addEventListener('click', function(e) {
+        if (!complexInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+    
+    function fetchComplexSuggestions(query) {
+        fetch(`{% url 'complex_autocomplete' %}?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                currentSuggestions = data.suggestions;
+                showSuggestions();
+            })
+            .catch(error => {
+                console.error('Error fetching suggestions:', error);
+                hideSuggestions();
+            });
+    }
+    
+    function showSuggestions() {
+        suggestionsDiv.innerHTML = '';
+        selectedIndex = -1;
+        
+        if (currentSuggestions.length === 0) {
+            hideSuggestions();
+            return;
+        }
+        
+        currentSuggestions.forEach((suggestion, index) => {
+            const div = document.createElement('div');
+            div.className = 'complex-suggestion';
+            div.textContent = suggestion.name;
+            div.onclick = () => selectSuggestion(suggestion);
+            suggestionsDiv.appendChild(div);
+        });
+        
+        suggestionsDiv.style.display = 'block';
+    }
+    
+    function hideSuggestions() {
+        suggestionsDiv.style.display = 'none';
+        selectedIndex = -1;
+    }
+    
+    function selectSuggestion(suggestion) {
+        complexInput.value = suggestion.name;
+        hideSuggestions();
+        complexInput.focus();
+    }
+    
+    function updateSelectedSuggestion() {
+        const suggestions = suggestionsDiv.querySelectorAll('.complex-suggestion');
+        suggestions.forEach((suggestion, index) => {
+            suggestion.classList.toggle('active', index === selectedIndex);
+        });
+    }
+}
+
+// Функция для валидации (вызывается из кнопок) - перенесена в DOMContentLoaded блок
+</script>
+
+<style>
+/* Стили для невалидных полей */
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.is-invalid:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+/* Стили для заблокированных кнопок */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Анимация для ошибок */
+.alert {
+    animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+{% endblock %}
+

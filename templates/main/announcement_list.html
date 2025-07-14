@@ -1,0 +1,862 @@
+{% extends 'base.html' %}
+{% load price_filters %}
+
+{% block title %}Недвижимость - ProAgentAstana{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-panel {
+        background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    }
+    
+    .search-panel .form-control,
+    .search-panel .form-select {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #333;
+        font-size: 14px;
+    }
+    
+    .search-panel .form-control:focus,
+    .search-panel .form-select:focus {
+        background: white;
+        border-color: #fff;
+        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+    }
+    
+    .search-panel label {
+        color: white;
+        font-weight: 500;
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+    
+    .rooms-buttons {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+    
+    .room-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    
+    .room-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .room-btn.active {
+        background: white;
+        color: #4a90e2;
+        border-color: white;
+    }
+    
+    .form-check-input {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .form-check-input:checked {
+        background-color: white;
+        border-color: white;
+    }
+    
+    .form-check-label {
+        color: white;
+        font-size: 14px;
+    }
+    
+    .search-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 15px;
+        flex-direction: column;
+    }
+    
+    .btn-search {
+        background: white;
+        color: #4a90e2;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: all 0.3s;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .btn-search:hover {
+        background: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-clear {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-clear:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    
+    .view-toggle {
+        display: flex;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .view-toggle button {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .view-toggle button.active {
+        background: white;
+        color: #4a90e2;
+    }
+    
+    .agency-checkbox {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    
+    .price-range {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .price-range input {
+        flex: 1;
+    }
+    
+    .price-range span {
+        color: white;
+        font-weight: 500;
+    }
+    
+    .microdistrict-help {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        font-style: italic;
+        margin-top: 5px;
+    }
+    
+    /* Компактные теги для фильтра landmarks */
+    .landmarks-filter-compact {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        max-height: 150px;
+        overflow-y: auto;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .landmark-filter-item {
+        position: relative;
+    }
+    
+    .landmark-filter-item input[type="checkbox"] {
+        display: none;
+    }
+    
+    .landmark-filter-tag {
+        display: inline-block;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid transparent;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        text-align: center;
+        line-height: 1.4;
+    }
+    
+    .landmark-filter-tag:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .landmark-filter-item input[type="checkbox"]:checked + .landmark-filter-tag,
+    .landmark-filter-tag.checked {
+        background: white;
+        color: #357abd;
+        border-color: #357abd;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .landmarks-filter-compact::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .landmarks-filter-compact::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 2px;
+    }
+    
+    .landmarks-filter-compact::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 2px;
+    }
+    
+    .landmarks-filter-compact::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.6);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-house"></i> Недвижимость</h2>
+    {% if user.is_authenticated %}
+        <a href="{% url 'announcement_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Добавить объявление
+        </a>
+    {% endif %}
+</div>
+
+<!-- Постоянное уведомление для пользователей с агентством "Прочее" -->
+{% if user.is_authenticated and user.agency.name == 'Прочее' %}
+<div class="alert alert-warning alert-dismissible fade show mb-4" role="alert" id="agencyChangeAlert">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h5 class="alert-heading mb-2">
+                <i class="bi bi-exclamation-triangle-fill"></i> Требуется обновление агентства
+            </h5>
+            <p class="mb-2">
+                <strong>Ваше агентство было удалено и установлено как "Прочее".</strong>
+            </p>
+            <p class="mb-0">
+                Пожалуйста, обновите информацию о вашем агентстве в личном кабинете для продолжения работы с платформой.
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'account' %}" class="btn btn-warning btn-lg fw-bold">
+                <i class="bi bi-building"></i> Изменить агентство
+            </a>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<style>
+#agencyChangeAlert {
+    background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+    border: 2px solid #ffb74d;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(255, 183, 77, 0.3);
+    animation: pulseWarning 2s infinite;
+}
+
+#agencyChangeAlert .alert-heading {
+    color: #e65100;
+}
+
+#agencyChangeAlert p {
+    color: #ef6c00;
+}
+
+#agencyChangeAlert .btn-warning {
+    background: linear-gradient(45deg, #ff9800, #f57c00);
+    border: none;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    box-shadow: 0 3px 10px rgba(255, 152, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+#agencyChangeAlert .btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 152, 0, 0.6);
+    background: linear-gradient(45deg, #fb8c00, #e65100);
+}
+
+@keyframes pulseWarning {
+    0% {
+        box-shadow: 0 4px 15px rgba(255, 183, 77, 0.3);
+    }
+    50% {
+        box-shadow: 0 6px 20px rgba(255, 183, 77, 0.5);
+    }
+    100% {
+        box-shadow: 0 4px 15px rgba(255, 183, 77, 0.3);
+    }
+}
+
+#agencyChangeAlert .btn-close {
+    filter: brightness(0.7);
+}
+</style>
+{% endif %}
+
+<!-- Advanced Search Panel -->
+<div class="search-panel">
+    <form method="get" id="searchForm">
+        <div class="row">
+            <!-- Левый блок -->
+            <div class="col-md-3">
+                <!-- Квартиры -->
+                <div class="mb-3">
+                    <label class="form-label">Квартиры</label>
+                    <div class="rooms-buttons">
+                        <button type="button" class="room-btn" data-rooms="1">1</button>
+                        <button type="button" class="room-btn" data-rooms="2">2</button>
+                        <button type="button" class="room-btn" data-rooms="3">3</button>
+                        <button type="button" class="room-btn" data-rooms="4">4</button>
+                        <button type="button" class="room-btn" data-rooms="5+">5+</button>
+                    </div>
+                </div>
+                
+                <!-- Тип дома -->
+                <div class="mb-3">
+                    <label class="form-label">Тип дома</label>
+                    {{ search_form.building_type }}
+                </div>
+                
+                <!-- Год постройки -->
+                <div class="mb-3">
+                    <label class="form-label">Год постройки</label>
+                    <div class="price-range">
+                        {{ search_form.year_built_from }}
+                        <span>до</span>
+                        {{ search_form.year_built_to }}
+                    </div>
+                </div>
+                
+                <!-- Жилой комплекс -->
+                <div class="mb-3">
+                    <label class="form-label">Жилой комплекс</label>
+                    {{ search_form.complex_name }}
+                </div>
+                
+                <!-- Фильтр по агентству -->
+                <div class="mb-3">
+                    <label class="form-label">Агентство</label>
+                    {{ search_form.agency }}
+                </div>
+            </div>
+            
+            <!-- Центральный блок -->
+            <div class="col-md-3">
+                <!-- Цена -->
+                <div class="mb-3">
+                    <label class="form-label">Цена</label>
+                    <div class="price-range">
+                        {{ search_form.price_from }}
+                        <span>до</span>
+                        {{ search_form.price_to }}
+                    </div>
+                </div>
+                
+                <!-- Микрорайон -->
+                <div class="mb-3">
+                    <label class="form-label">Микрорайон</label>
+                    {{ search_form.microdistrict }}
+                </div>
+                
+                <!-- Площадь -->
+                <div class="mb-3">
+                    <label class="form-label">Площадь</label>
+                    <div class="price-range">
+                        {{ search_form.area_from }}
+                        <span>до</span>
+                        {{ search_form.area_to }}
+                    </div>
+                </div>
+                
+                <!-- Фильтр по опорным точкам -->
+                <div class="mb-3">
+                    <label class="form-label">Дом находится рядом с:</label>
+                    <div class="landmarks-filter-compact">
+                        {% for choice in search_form.landmarks %}
+                            <div class="landmark-filter-item">
+                                {{ choice.tag }}
+                                <div class="landmark-filter-tag" data-for="{{ choice.id_for_label }}">
+                                    {{ choice.choice_label }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Правый блок -->
+            <div class="col-md-3">
+                <!-- Цена за м² -->
+                <div class="mb-3">
+                    <label class="form-label">Цена за м²</label>
+                    <div class="price-range">
+                        {{ search_form.price_per_sqm_from }}
+                        <span>до</span>
+                        {{ search_form.price_per_sqm_to }}
+                    </div>
+                </div>
+                
+                <!-- Этаж -->
+                <div class="mb-3">
+                    <label class="form-label">Этаж</label>
+                    <div class="price-range">
+                        {{ search_form.floor_from }}
+                        <span>до</span>
+                        {{ search_form.floor_to }}
+                    </div>
+                </div>
+                
+                <!-- Чекбоксы этажей -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ search_form.not_first_floor }}
+                        <label class="form-check-label" for="{{ search_form.not_first_floor.id_for_label }}">
+                            Не первый этаж
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        {{ search_form.not_last_floor }}
+                        <label class="form-check-label" for="{{ search_form.not_last_floor.id_for_label }}">
+                            Не последний этаж
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Показать только новостройки -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ search_form.is_new_building }}
+                        <label class="form-check-label" for="{{ search_form.is_new_building.id_for_label }}">
+                            Показать только новостройки
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Кнопки и дополнительные опции -->
+            <div class="col-md-3">
+                <!-- Предложения от агентства -->
+                <div class="agency-checkbox">
+                    <div class="form-check">
+                        {{ search_form.agency_only }}
+                        <label class="form-check-label" for="{{ search_form.agency_only.id_for_label }}">
+                            Показать только предложения где партнер дополнительно платит вознаграждение
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Кнопки поиска -->
+                <div class="search-buttons">
+                    <button type="submit" class="btn-search">
+                        Показать результаты
+                    </button>
+                    <button type="button" class="btn-search btn-clear" id="clearFilters">
+                        Очистить фильтр
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- Скрытые поля для комнат -->
+        <div id="roomsInputs"></div>
+    </form>
+</div>
+
+<!-- Properties Grid -->
+{% if announcements %}
+    <div class="row">
+        {% for announcement in announcements %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm" style="cursor: pointer;" onclick="window.location.href='{% url 'announcement_detail' announcement.pk %}'">
+                    {% if announcement.photos.all %}
+                        {% for photo in announcement.photos.all %}
+                            {% if photo.is_main %}
+                                <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="card-img-top" alt="Фото недвижимости" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                        {% empty %}
+                            {% if announcement.photos.first %}
+                                <img src="{{ MEDIA_URL }}{{ announcement.photos.first.file_path }}" class="card-img-top" alt="Фото недвижимости" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">
+                            {{ announcement.rooms_count }}-комнатная квартира
+                        </h5>
+                        
+                        <p class="card-text text-muted small">
+                            <i class="bi bi-geo-alt"></i>
+                            {% if announcement.address.microdistrict %}
+                                {{ announcement.address.microdistrict }}
+                            {% endif %}
+                            {% if announcement.address.complex_name %}
+                                , {{ announcement.address.complex_name }}
+                            {% endif %}
+                            {% if announcement.address.street %}
+                                , {{ announcement.address.street }}
+                            {% endif %}
+                        </p>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <small class="text-muted">Площадь</small><br>
+                                <strong>{{ announcement.area }} м²</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Этаж</small><br>
+                                <strong>
+                                    {% if announcement.floor %}
+                                        {{ announcement.floor }}
+                                        {% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %}
+                                    {% else %}
+                                        Не указан
+                                    {% endif %}
+                                </strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Ремонт</small><br>
+                                <strong>{{ announcement.get_repair_status_display }}</strong>
+                            </div>
+                        </div>
+                        
+                        {% if announcement.description %}
+                            <p class="card-text">
+                                {{ announcement.description|truncatewords:15 }}
+                            </p>
+                        {% endif %}
+                        
+                        {% if announcement.landmarks.all %}
+                            <p class="card-text small text-success">
+                                <i class="bi bi-geo"></i> 
+                                {% for landmark in announcement.landmarks.all %}
+                                    {{ landmark.name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 class="text-primary mb-0">
+                                    {{ announcement.price|format_price }} ₸
+                                </h4>
+                                <div class="text-end">
+                                <small class="text-muted">
+                                    <i class="bi bi-person"></i> {{ announcement.user.first_name }}
+                                </small>
+                                    <br>
+                                    <small class="text-info">
+                                        <i class="bi bi-building"></i> {{ announcement.user.agency.name }}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{% url 'announcement_detail' announcement.pk %}" class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation();">
+                                    <i class="bi bi-eye"></i> Смотреть
+                                </a>
+                                
+                                {% if user.is_authenticated %}
+                                    {% if user != announcement.user %}
+                                        <button class="btn btn-outline-secondary btn-sm collection-btn" 
+                                                data-announcement-id="{{ announcement.pk }}" 
+                                                onclick="event.stopPropagation();">
+                                            <i class="bi bi-bookmark"></i> В коллекцию
+                                        </button>
+                                    {% else %}
+                                        <!-- Это ваше объявление -->
+                                        <small class="text-muted align-self-center">Ваше объявление</small>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Для неавторизованных пользователей -->
+                                    <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm" onclick="event.stopPropagation();">
+                                        <i class="bi bi-bookmark"></i> В коллекцию
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Пагинация объявлений">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link pagination-link" href="#" data-page="1">Первая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link pagination-link" href="#" data-page="{{ page_obj.previous_page_number }}">Предыдущая</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link pagination-link" href="#" data-page="{{ page_obj.next_page_number }}">Следующая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link pagination-link" href="#" data-page="{{ page_obj.paginator.num_pages }}">Последняя</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-house text-muted" style="font-size: 4rem;"></i>
+        <h4 class="mt-3 text-muted">Объявления не найдены</h4>
+        <p class="text-muted">Попробуйте изменить критерии поиска или зайдите позже.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'announcement_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Добавить первое объявление
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Modal for Collection Selection -->
+<div class="modal fade" id="collectionModal" tabindex="-1" aria-labelledby="collectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="collectionModalLabel">Добавить в коллекцию</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Выберите коллекцию для добавления объявления:</p>
+                <div id="collectionsList">
+                    {% if user.is_authenticated %}
+                        {% for collection in user.collections.all %}
+                            <button class="btn btn-outline-primary w-100 mb-2 add-to-collection" 
+                                    data-collection-id="{{ collection.pk }}">
+                                {{ collection.name }}
+                            </button>
+                        {% empty %}
+                            <p class="text-muted">У вас пока нет коллекций</p>
+                            <a href="{% url 'collection_create' %}" class="btn btn-primary">
+                                Создать новую коллекцию
+                            </a>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Обработка кнопок количества комнат
+    let selectedRooms = [];
+    
+    // Инициализация из URL параметров
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomsFromUrl = urlParams.getAll('rooms_count');
+    if (roomsFromUrl.length > 0) {
+        selectedRooms = roomsFromUrl;
+        updateRoomButtons();
+    }
+    
+    $('.room-btn').click(function() {
+        const rooms = $(this).data('rooms').toString();
+        
+        if (selectedRooms.includes(rooms)) {
+            // Убираем из выбранных
+            selectedRooms = selectedRooms.filter(r => r !== rooms);
+            $(this).removeClass('active');
+        } else {
+            // Добавляем к выбранным
+            selectedRooms.push(rooms);
+            $(this).addClass('active');
+        }
+        
+        updateRoomInputs();
+    });
+    
+    function updateRoomButtons() {
+        $('.room-btn').each(function() {
+            const rooms = $(this).data('rooms').toString();
+            if (selectedRooms.includes(rooms)) {
+                $(this).addClass('active');
+            }
+        });
+    }
+    
+    function updateRoomInputs() {
+        $('#roomsInputs').empty();
+        selectedRooms.forEach(function(room) {
+            $('#roomsInputs').append(`<input type="hidden" name="rooms_count" value="${room}">`);
+        });
+    }
+    
+    // Инициализация скрытых полей при загрузке
+    updateRoomInputs();
+    
+    // Переменная для хранения ID текущего объявления
+    let currentAnnouncementId = null;
+    
+    // Обработка кнопки "В коллекцию"
+    $('.collection-btn').click(function(e) {
+        e.preventDefault();
+        currentAnnouncementId = $(this).data('announcement-id');
+        $('#collectionModal').modal('show');
+    });
+    
+    // Handle add to collection
+    $('.add-to-collection').click(function(e) {
+        e.preventDefault();
+        const collectionId = $(this).data('collection-id');
+        
+        if (!currentAnnouncementId) {
+            alert('Ошибка: не выбрано объявление');
+            return;
+        }
+        
+        $.ajax({
+            url: '{% url "add_to_collection" %}',
+            method: 'POST',
+            data: {
+                'announcement_id': currentAnnouncementId,
+                'collection_id': collectionId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#collectionModal').modal('hide');
+                    // Показываем уведомление
+                    $('<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert">' +
+                      'Объявление добавлено в коллекцию!' +
+                      '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                      '</div>').appendTo('body');
+                    
+                    // Автоматически скрываем через 3 секунды
+                    setTimeout(function() {
+                        $('.alert').alert('close');
+                    }, 3000);
+                } else {
+                    alert('Ошибка: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при добавлении в коллекцию.');
+            }
+        });
+    });
+    
+    // Переключатель вида
+    $('.view-toggle button').click(function() {
+        $('.view-toggle button').removeClass('active');
+        $(this).addClass('active');
+    });
+    
+    // Обработка кликов по компактным тегам landmarks
+    $('.landmark-filter-tag').click(function(e) {
+        e.preventDefault();
+        const checkboxId = $(this).data('for');
+        const checkbox = $('#' + checkboxId);
+        checkbox.prop('checked', !checkbox.prop('checked'));
+        
+        // Визуальное обновление стиля тега
+        $(this).toggleClass('checked', checkbox.prop('checked'));
+    });
+    
+    // Инициализация состояния landmark тегов при загрузке
+    $('.landmark-filter-item input[type="checkbox"]').each(function() {
+        const checkbox = $(this);
+        const tag = $(`.landmark-filter-tag[data-for="${checkbox.attr('id')}"]`);
+        
+        if (checkbox.prop('checked')) {
+            tag.addClass('checked');
+        }
+    });
+
+    // Кнопка очистки фильтров
+    $('#clearFilters').click(function() {
+        // Очищаем все поля формы
+        $('#searchForm')[0].reset();
+        
+        // Убираем активные кнопки комнат
+        $('.room-btn').removeClass('active');
+        selectedRooms = [];
+        updateRoomInputs();
+        
+        // Убираем активные теги landmarks
+        $('.landmark-filter-tag').removeClass('checked');
+        $('.landmark-filter-item input[type="checkbox"]').prop('checked', false);
+        
+        // Перенаправляем на страницу без параметров
+        window.location.href = window.location.pathname;
+    });
+    
+    // Пагинация с сохранением фильтров
+    $('.pagination-link').click(function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        
+        // Получаем текущие данные формы
+        const formData = new FormData($('#searchForm')[0]);
+        const params = new URLSearchParams();
+        
+        // Добавляем номер страницы
+        params.append('page', page);
+        
+        // Добавляем все параметры фильтра
+        for (let [key, value] of formData.entries()) {
+            if (value && value.trim() !== '') {
+                params.append(key, value);
+            }
+        }
+        
+        // Перенаправляем с параметрами
+        window.location.href = window.location.pathname + '?' + params.toString();
+    });
+});
+</script>
+{% endblock %}
+

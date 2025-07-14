@@ -1,0 +1,586 @@
+{% extends 'base.html' %}
+{% load price_filters %}
+
+{% block title %}{{ announcement.rooms_count }}-комнатная квартира - ProAgentAstana{% endblock %}
+
+{% block extra_css %}
+<style>
+.photo-thumbnail {
+    width: 150px !important;
+    height: 150px !important;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    margin: 0 auto;
+    display: block;
+}
+
+.photo-thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Адаптивные стили для разных размеров экрана */
+@media (max-width: 768px) {
+    .photo-thumbnail {
+        width: 120px !important;
+        height: 120px !important;
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .photo-thumbnail {
+        width: 90px !important;
+        height: 90px !important;
+        border-radius: 8px;
+    }
+}
+
+/* Центрирование контейнеров фотографий */
+.photo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+/* Grid для 5 фотографий в ряду */
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    row-gap: 14px;
+    margin-top: 15px;
+    margin-bottom: 0.5rem;
+}
+
+.photo-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Адаптивная сетка для мобильных устройств */
+@media (max-width: 768px) {
+    .photos-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3px;
+        row-gap: 8px;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .photos-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+        row-gap: 6px;
+        margin-top: 6px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Property Photos -->
+        {% if announcement.photos.all %}
+            <!-- Главное фото -->
+            {% for photo in announcement.photos.all %}
+                {% if photo.is_main %}
+                    <div class="mb-1">
+                        <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="img-fluid w-100 rounded photo-main" alt="Главное фото" style="height: 320px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#photoModal" data-photo-src="{{ MEDIA_URL }}{{ photo.file_path }}">
+                    </div>
+                {% endif %}
+            {% empty %}
+                <!-- Если нет главного фото, показываем первое -->
+                {% with announcement.photos.first as first_photo %}
+                    <div class="mb-1">
+                        <img src="{{ MEDIA_URL }}{{ first_photo.file_path }}" class="img-fluid w-100 rounded photo-main" alt="Фото недвижимости" style="height: 320px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#photoModal" data-photo-src="{{ MEDIA_URL }}{{ first_photo.file_path }}">
+                    </div>
+                {% endwith %}
+            {% endfor %}
+            
+            <!-- Остальные фото в ряд -->
+            {% if announcement.photos.count > 1 %}
+                {% comment %}
+                Создаем список не-главных фотографий
+                {% endcomment %}
+                {% regroup announcement.photos.all by is_main as photos_by_main %}
+                {% for group in photos_by_main %}
+                    {% if not group.grouper %}
+                        {% comment %}По 5 фотографий в ряду{% endcomment %}
+                        <div class="photos-grid">
+                            {% for photo in group.list %}
+                                <div class="photo-item">
+                                    <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="photo-thumbnail" alt="Фото недвижимости" data-bs-toggle="modal" data-bs-target="#photoModal" data-photo-src="{{ MEDIA_URL }}{{ photo.file_path }}">
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center mb-4 rounded" style="height: 400px;">
+                <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+            </div>
+        {% endif %}
+
+        <!-- Property Details -->
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">{{ announcement.rooms_count }}-комнатная квартира</h1>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h3 class="text-primary">{{ announcement.price|format_price }} ₸</h3>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <span class="badge bg-secondary">{{ announcement.get_repair_status_display }}</span>
+                        {% if announcement.is_new_building %}
+                            <span class="badge bg-success">Новостройка</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Property Specifications -->
+                <div class="row mb-4">
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-arrows-angle-expand text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>{{ announcement.area }} м²</strong><br>
+                                <small class="text-muted">Площадь</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-building text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>
+                                    {% if announcement.floor %}
+                                        {{ announcement.floor }}
+                                        {% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %}
+                                    {% else %}
+                                        Не указан
+                                    {% endif %}
+                                </strong><br>
+                                <small class="text-muted">Этаж</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-door-open text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>{{ announcement.rooms_count }}</strong><br>
+                                <small class="text-muted">Комнат</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-calendar text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>
+                                    {% if announcement.year_built %}
+                                        {{ announcement.year_built }}
+                                    {% else %}
+                                        Не указан
+                                    {% endif %}
+                                </strong><br>
+                                <small class="text-muted">Год постройки</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-12 text-center mb-3">
+                        <div class="border rounded p-3 h-100">
+                            <i class="bi bi-geo text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                {% if announcement.landmarks.all %}
+                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                        {% for landmark in announcement.landmarks.all %}
+                                            <span class="badge bg-success" style="font-size: 10px;">{{ landmark.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <strong>Не указано</strong>
+                                {% endif %}
+                                <br><small class="text-muted">Дом находится рядом с</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address and Building Type -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h5><i class="bi bi-geo-alt"></i> Адрес</h5>
+                        <p class="text-muted">
+                            {% if announcement.address.microdistrict %}
+                                {{ announcement.address.microdistrict }}
+                            {% endif %}
+                            {% if announcement.address.complex_name %}
+                                {% if announcement.address.microdistrict %}, {% endif %}{{ announcement.address.complex_name }}
+                            {% endif %}
+                            {% if announcement.address.street %}
+                                {% if announcement.address.microdistrict or announcement.address.complex_name %}, {% endif %}{{ announcement.address.street }}
+                            {% endif %}
+                            {% if announcement.address.building_no %}
+                                {% if announcement.address.microdistrict or announcement.address.complex_name or announcement.address.street %}, {% endif %}дом {{ announcement.address.building_no }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if announcement.building_type %}
+                        <div class="col-md-4">
+                            <h5><i class="bi bi-building"></i> Тип дома</h5>
+                            <p class="text-muted">{{ announcement.building_type }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                {% if announcement.description %}
+                    <div class="mb-4">
+                        <h5><i class="bi bi-card-text"></i> Описание</h5>
+                        <p>{{ announcement.description|linebreaks }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if user == announcement.user %}
+                        <a href="{% url 'announcement_update' announcement.pk %}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        <a href="{% url 'announcement_delete' announcement.pk %}" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                        
+                        <!-- Archive/Unarchive buttons -->
+                        {% if announcement.is_archived %}
+                            <form method="post" action="{% url 'unarchive_announcement' announcement.pk %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-archive"></i> Убрать из архива
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'archive_announcement' announcement.pk %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-archive-fill"></i> Добавить в архив
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% elif user.is_authenticated %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-bookmark"></i> Добавить в коллекцию
+                            </button>
+                            <ul class="dropdown-menu" id="collectionsDropdown" style="min-width: 250px;">
+                                <div id="existingCollections">
+                                    {% for collection in user_collections %}
+                                        <li>
+                                            <a class="dropdown-item add-to-collection" href="#" 
+                                               data-announcement-id="{{ announcement.pk }}" 
+                                               data-collection-id="{{ collection.pk }}">
+                                                <i class="bi bi-bookmark-fill text-primary"></i> {{ collection.name }}
+                                            </a>
+                                        </li>
+                                    {% empty %}
+                                        <li><span class="dropdown-item-text text-muted">Нет коллекций</span></li>
+                                    {% endfor %}
+                                </div>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <div class="px-3 py-2">
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="newCollectionName" 
+                                                   placeholder="Название новой коллекции"
+                                                   maxlength="255">
+                                        </div>
+                                        <button class="btn btn-primary btn-sm w-100" 
+                                                id="createCollectionBtn" 
+                                                data-announcement-id="{{ announcement.pk }}">
+                                            <i class="bi bi-plus-circle"></i> Создать коллекцию
+                                        </button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'announcement_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Назад к объявлениям
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Information -->
+    <div class="col-lg-4">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-body text-center">
+                <h5 class="card-title">Связаться с агентом</h5>
+                
+                {% if announcement.user.photos.all %}
+                    {% for photo in announcement.user.photos.all %}
+                        {% if photo.is_main %}
+                            <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="rounded-circle mb-3" alt="Фото агента" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% endif %}
+                    {% empty %}
+                        {% if announcement.user.photos.first %}
+                            <img src="{{ MEDIA_URL }}{{ announcement.user.photos.first.file_path }}" class="rounded-circle mb-3" alt="Фото агента" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-person text-muted" style="font-size: 2rem;"></i>
+                    </div>
+                {% endif %}
+
+                <h6>{{ announcement.user.first_name }} {{ announcement.user.last_name }}</h6>
+                <p class="text-muted small">{{ announcement.user.agency.name }}</p>
+
+                <div class="d-grid gap-2">
+                    <a href="tel:{{ announcement.user.phone }}" class="btn btn-primary">
+                        <i class="bi bi-phone"></i> {{ announcement.user.phone }}
+                    </a>
+                    
+                    {% if announcement.user.whatsapp_phone %}
+                        <a href="https://wa.me/{{ announcement.user.whatsapp_phone|cut:'+' }}" class="btn btn-success" target="_blank">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                    {% endif %}
+                    
+                    {% if announcement.user.email %}
+                        <a href="mailto:{{ announcement.user.email }}" class="btn btn-outline-primary">
+                            <i class="bi bi-envelope"></i> Email
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Commission Info -->
+                {% if announcement.commission_type %}
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="bi bi-percent"></i> Условия комиссии</h6>
+                        <small class="text-muted">
+                            {% if announcement.commission_type == 'seller' %}
+                                Я беру с продавца, вы берете с покупателя
+                            {% elif announcement.commission_type == 'split' %}
+                                Я беру с продавца и {% if announcement.commission_percentage %}{{ announcement.commission_percentage }}%{% endif %} с покупателя. Остальное ваше
+                            {% elif announcement.commission_type == 'buyer' %}
+                                Я беру с продавца, вы - с покупателя{% if announcement.commission_amount %} {{ announcement.commission_amount|format_price }} ₸{% endif %}{% if announcement.commission_bonus %}<br>и я дополнительно доплачиваю вам {{ announcement.commission_bonus|format_price }} ₸{% endif %}
+                            {% endif %}
+                        </small>
+                    </div>
+                {% endif %}
+
+                <hr>
+                
+                <small class="text-muted">
+                    <i class="bi bi-calendar"></i> Опубликовано {{ announcement.created_at|date:"d.m.Y" }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра фотографий -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 p-2">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalPhoto" src="" alt="Увеличенное фото" class="img-fluid" style="max-height: 80vh; max-width: 100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Обработка кликов по фотографиям
+document.addEventListener('DOMContentLoaded', function() {
+    const photoThumbnails = document.querySelectorAll('.photo-thumbnail');
+    const photoMain = document.querySelectorAll('.photo-main');
+    const modalPhoto = document.getElementById('modalPhoto');
+    
+    // Обработка миниатюр
+    photoThumbnails.forEach(function(thumbnail) {
+        thumbnail.addEventListener('click', function() {
+            const photoSrc = this.getAttribute('data-photo-src');
+            modalPhoto.src = photoSrc;
+        });
+    });
+    
+    // Обработка главного фото
+    photoMain.forEach(function(mainPhoto) {
+        mainPhoto.addEventListener('click', function() {
+            const photoSrc = this.getAttribute('data-photo-src');
+            modalPhoto.src = photoSrc;
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Setup CSRF token for AJAX requests
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+        }
+    }
+});
+
+$(document).ready(function() {
+    // Handle add to collection
+    $(document).on('click', '.add-to-collection', function(e) {
+        e.preventDefault();
+        
+        var announcementId = $(this).data('announcement-id');
+        var collectionId = $(this).data('collection-id');
+        
+        $.ajax({
+            url: '{% url "add_to_collection" %}',
+            method: 'POST',
+            data: {
+                'announcement_id': announcementId,
+                'collection_id': collectionId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(data) {
+                if (data.success) {
+                    // Show success message
+                    showMessage(data.message, 'success');
+                    // Close dropdown
+                    var dropdown = bootstrap.Dropdown.getInstance($('.dropdown-toggle')[0]);
+                    if (dropdown) dropdown.hide();
+                } else {
+                    // Show error message
+                    showMessage(data.message, 'warning');
+                }
+            },
+            error: function() {
+                showMessage('Произошла ошибка при добавлении в коллекцию', 'danger');
+            }
+        });
+    });
+    
+    // Handle create new collection
+    $('#createCollectionBtn').click(function(e) {
+        e.preventDefault();
+        
+        var collectionName = $('#newCollectionName').val().trim();
+        var announcementId = $(this).data('announcement-id');
+        
+        if (!collectionName) {
+            showMessage('Введите название коллекции', 'warning');
+            return;
+        }
+        
+        // Disable button during request
+        $(this).prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Создание...');
+        
+        $.ajax({
+            url: '{% url "create_collection_ajax" %}',
+            method: 'POST',
+            data: {
+                'collection_name': collectionName,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(data) {
+                if (data.success) {
+                    // Add new collection to dropdown
+                    var newCollectionItem = 
+                        '<li>' +
+                            '<a class="dropdown-item add-to-collection" href="#" ' +
+                               'data-announcement-id="' + announcementId + '" ' +
+                               'data-collection-id="' + data.collection.id + '">' +
+                                '<i class="bi bi-bookmark-fill text-primary"></i> ' + data.collection.name +
+                            '</a>' +
+                        '</li>';
+                    
+                    // Remove "Нет коллекций" message if it exists
+                    $('#existingCollections .dropdown-item-text').parent().remove();
+                    
+                    // Add new collection to the list
+                    $('#existingCollections').append(newCollectionItem);
+                    
+                    // Clear input
+                    $('#newCollectionName').val('');
+                    
+                    // Show success message
+                    showMessage('Коллекция "' + data.collection.name + '" создана успешно', 'success');
+                    
+                    // Automatically add announcement to new collection
+                    $.ajax({
+                        url: '{% url "add_to_collection" %}',
+                        method: 'POST',
+                        data: {
+                            'announcement_id': announcementId,
+                            'collection_id': data.collection.id,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function(addData) {
+                            if (addData.success) {
+                                showMessage('Объявление добавлено в новую коллекцию', 'success');
+                                // Close dropdown
+                                var dropdown = bootstrap.Dropdown.getInstance($('.dropdown-toggle')[0]);
+                                if (dropdown) dropdown.hide();
+                            }
+                        }
+                    });
+                } else {
+                    showMessage(data.message, 'danger');
+                }
+            },
+            error: function() {
+                showMessage('Произошла ошибка при создании коллекции', 'danger');
+            },
+            complete: function() {
+                // Re-enable button
+                $('#createCollectionBtn').prop('disabled', false).html('<i class="bi bi-plus-circle"></i> Создать коллекцию');
+            }
+        });
+    });
+    
+    // Handle Enter key in collection name input
+    $('#newCollectionName').keypress(function(e) {
+        if (e.which === 13) { // Enter key
+            $('#createCollectionBtn').click();
+        }
+    });
+    
+    // Function to show messages
+    function showMessage(message, type) {
+        var alertClass = 'alert-' + type;
+        var alert = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" ' +
+                      'style="top: 20px; right: 20px; z-index: 9999;" role="alert">' +
+                      message +
+                      '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                      '</div>');
+        
+        $('body').append(alert);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(function() {
+            alert.alert('close');
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,3 @@
+C:\cloud_sql_proxy.exe `
+  -instances="vps-for-cry:us-central1:proagentastana-sql=tcp:5433" `
+  -credential_file="C:\keys\cloudsql-sa.json"

@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - ProAgentAstana{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-building text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="mt-2">ProAgentAstana</h3>
+                    <p class="text-muted">Платформа для риэлторов Астаны</p>
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        Для доступа к сайту необходима авторизация
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">
+                            <i class="bi bi-phone"></i> Номер телефона
+                        </label>
+                        <input type="text" name="username" class="form-control phone-mask" placeholder="7(XXX)-XXX-XXXX" required id="id_username" autofocus data-mask="7(000)-000-0000">
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">
+                            <i class="bi bi-lock"></i> Пароль
+                        </label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted">
+                        У вас не создан аккаунт?
+                        <a href="{% url 'register' %}" class="text-decoration-none">
+                            Регистрация здесь
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Функция для применения маски телефона
+    function applyPhoneMask(input) {
+        input.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
+            
+            // Если пользователь начинает вводить не с 7, добавляем 7
+            if (value.length > 0 && !value.startsWith('7')) {
+                if (value.startsWith('8')) {
+                    value = '7' + value.substring(1);
+                } else if (value.startsWith('9')) {
+                    value = '7' + value;
+                } else {
+                    value = '7' + value;
+                }
+            }
+            
+            // Ограничиваем длину до 11 цифр
+            value = value.substring(0, 11);
+            
+            // Применяем маску 7(XXX)-XXX-XXXX
+            let formattedValue = '';
+            if (value.length > 0) {
+                formattedValue = '7';
+                if (value.length > 1) {
+                    formattedValue += '(' + value.substring(1, 4);
+                    if (value.length > 4) {
+                        formattedValue += ')-' + value.substring(4, 7);
+                        if (value.length > 7) {
+                            formattedValue += '-' + value.substring(7, 11);
+                        }
+                    } else if (value.length === 4) {
+                        formattedValue += ')';
+                    }
+                }
+            }
+            
+            e.target.value = formattedValue;
+        });
+        
+        // Обработка клавиши Backspace
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') {
+                const value = e.target.value;
+                const cursorPos = e.target.selectionStart;
+                
+                // Если курсор стоит после специального символа, удаляем цифру перед ним
+                if (cursorPos > 0) {
+                    const charBefore = value[cursorPos - 1];
+                    if (['(', ')', '-'].includes(charBefore)) {
+                        e.preventDefault();
+                        const newValue = value.substring(0, cursorPos - 2) + value.substring(cursorPos);
+                        e.target.value = newValue;
+                        e.target.setSelectionRange(cursorPos - 1, cursorPos - 1);
+                        
+                        // Повторно применяем маску
+                        const event = new Event('input', { bubbles: true });
+                        e.target.dispatchEvent(event);
+                    }
+                }
+            }
+        });
+        
+        // Запрещаем ввод нецифровых символов
+        input.addEventListener('keypress', function(e) {
+            if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Применяем маску ко всем полям с классом phone-mask
+    const phoneInputs = document.querySelectorAll('.phone-mask');
+    phoneInputs.forEach(function(input) {
+        applyPhoneMask(input);
+        
+        // Устанавливаем начальное значение 7 для поля телефона
+        if (input.value === '') {
+            input.value = '7';
+        }
+    });
+});
+</script>
+{% endblock %}
+
