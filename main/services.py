@@ -247,6 +247,14 @@ class CollectionService:
     def delete_collection(collection):
         """Delete collection"""
         collection.delete()
+    
+    @staticmethod
+    def get_announcement_collections(announcement, user):
+        """Get collections where announcement is added by specific user"""
+        return Collection.objects.filter(
+            user=user,
+            items__announcement=announcement
+        ).order_by('name')
 
 
 class UserSessionService:

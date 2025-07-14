@@ -607,6 +607,18 @@
                                     </a>
                                 {% endif %}
                             </div>
+                            
+                            <!-- Показываем информацию о коллекциях, если объявление уже добавлено -->
+                            {% if user.is_authenticated and announcement.user_collections %}
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="bi bi-bookmark-fill"></i> В коллекциях: 
+                                        {% for collection in announcement.user_collections %}
+                                            <span class="badge bg-success">{{ collection.name }}</span>{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </small>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -779,6 +791,9 @@ $(document).ready(function() {
                     setTimeout(function() {
                         $('.alert').alert('close');
                     }, 3000);
+                    
+                    // Обновляем информацию о коллекциях для этого объявления
+                    updateAnnouncementCollections(currentAnnouncementId, collectionId);
                 } else {
                     alert('Ошибка: ' + response.message);
                 }
@@ -856,6 +871,42 @@ $(document).ready(function() {
         // Перенаправляем с параметрами
         window.location.href = window.location.pathname + '?' + params.toString();
     });
+    
+    // Функция для обновления информации о коллекциях
+    function updateAnnouncementCollections(announcementId, collectionId) {
+        // Находим карточку объявления
+        const announcementCard = $(`.collection-btn[data-announcement-id="${announcementId}"]`).closest('.col-lg-4');
+        
+        // Получаем название коллекции из кнопки
+        const collectionName = $(`.add-to-collection[data-collection-id="${collectionId}"]`).text().trim();
+        
+        // Проверяем, есть ли уже информация о коллекциях
+        let collectionsInfo = announcementCard.find('.text-success');
+        
+        if (collectionsInfo.length === 0) {
+            // Создаем новый блок с информацией о коллекциях
+            const newCollectionsInfo = $(`
+                <div class="mt-2">
+                    <small class="text-success">
+                        <i class="bi bi-bookmark-fill"></i> В коллекциях: 
+                        <span class="badge bg-success">${collectionName}</span>
+                    </small>
+                </div>
+            `);
+            announcementCard.find('.d-flex.gap-2').after(newCollectionsInfo);
+        } else {
+            // Добавляем новую коллекцию к существующему списку
+            const badges = collectionsInfo.find('.badge');
+            if (badges.length > 0) {
+                // Добавляем запятую и новую коллекцию
+                const newBadge = $(`, <span class="badge bg-success">${collectionName}</span>`);
+                badges.last().after(newBadge);
+            } else {
+                // Если нет бейджей, создаем первый
+                collectionsInfo.append(`<span class="badge bg-success">${collectionName}</span>`);
+            }
+        }
+    }
 });
 </script>
 {% endblock %}

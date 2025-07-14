@@ -309,9 +309,9 @@ class AnnouncementListView(ListView):
             # Только предложения от агентства
             agency_only = form.cleaned_data.get('agency_only')
             if agency_only:
-                # Здесь можно добавить логику фильтрации по агентствам
-                # Например, исключить частных лиц или применить другую логику
-                pass
+                # Показываем только объявления где партнер дополнительно платит вознаграждение
+                # Это третий вариант комиссии: 'buyer' - "Я беру с продавца, вы - с покупателя и я дополнительно доплачиваю вам"
+                queryset = queryset.filter(commission_type='buyer')
             
             # Фильтр по агентству
             agency = form.cleaned_data.get('agency')
@@ -339,6 +339,13 @@ class AnnouncementListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_form'] = SearchForm(self.request.GET)
+        
+        # Добавляем информацию о коллекциях для каждого объявления
+        if self.request.user.is_authenticated:
+            announcements = context['announcements']
+            for announcement in announcements:
+                announcement.user_collections = CollectionService.get_announcement_collections(announcement, self.request.user)
+        
         return context
 
 
@@ -359,6 +366,12 @@ class AnnouncementDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         # Добавляем фото в контекст
         context['photos'] = self.object.photos.all()
+        
+        # Добавляем коллекции пользователя для кнопки "Добавить в коллекцию"
+        if self.request.user.is_authenticated:
+            context['user_collections'] = CollectionService.get_user_collections(self.request.user)
+            # Добавляем информацию о том, в каких коллекциях уже находится объявление
+            context['announcement_collections'] = CollectionService.get_announcement_collections(self.object, self.request.user)
         
         # Log announcement view
         if self.request.user.is_authenticated:
@@ -596,9 +609,9 @@ class AccountView(LoginRequiredMixin, View):
         total_announcements = user_announcements.count()
         total_collections = user_collections.count()
         
-        # Создаем форму для изменения агентства
-        from .forms import ChangeAgencyForm
+        from .forms import ChangeAgencyForm, ChangePasswordForm
         change_agency_form = ChangeAgencyForm(user=request.user)
+        change_password_form = ChangePasswordForm(user=request.user)
         
         context = {
             'user': request.user,
@@ -608,16 +621,17 @@ class AccountView(LoginRequiredMixin, View):
             'total_announcements': total_announcements,
             'total_collections': total_collections,
             'change_agency_form': change_agency_form,
+            'change_password_form': change_password_form,
         }
         return render(request, self.template_name, context)
     
     def post(self, request):
-        """Handle agency change form submission"""
-        from .forms import ChangeAgencyForm
+        from .forms import ChangeAgencyForm, ChangePasswordForm
         from .utils import log_user_activity
         
         if 'change_agency' in request.POST:
             change_agency_form = ChangeAgencyForm(request.POST, user=request.user)
+            change_password_form = ChangePasswordForm(user=request.user)
             
             if change_agency_form.is_valid():
                 try:
@@ -667,8 +681,28 @@ class AccountView(LoginRequiredMixin, View):
                 # Форма не валидна
                 messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
         
-        # Если POST запрос не был обработан или была ошибка, показываем страницу снова
-        return self.get(request)
+        elif 'change_password' in request.POST:
+            change_password_form = ChangePasswordForm(request.user, request.POST)
+            change_agency_form = ChangeAgencyForm(user=request.user)
+            if change_password_form.is_valid():
+                change_password_form.save()
+                messages.success(request, 'Пароль успешно изменён!')
+                return redirect('account')
+            else:
+                messages.error(request, 'Проверьте правильность заполнения формы смены пароля.')
+            context = {
+                'user': request.user,
+                'archived_announcements': AnnouncementService.get_archived_user_announcements(request.user),
+                'user_announcements': AnnouncementService.get_user_announcements(request.user),
+                'user_collections': CollectionService.get_user_collections(request.user),
+                'total_announcements': AnnouncementService.get_user_announcements(request.user).count(),
+                'total_collections': CollectionService.get_user_collections(request.user).count(),
+                'change_agency_form': change_agency_form,
+                'change_password_form': change_password_form,
+            }
+            return render(request, self.template_name, context)
+        else:
+            return self.get(request)
 
 
 # AJAX Views for collection management
@@ -782,6 +816,51 @@ def create_collection_ajax(request):
     return JsonResponse({'success': False, 'message': 'Invalid request'})
 
 
+@login_required
+def rename_collection(request, pk):
+    """Rename a collection"""
+    collection = get_object_or_404(Collection, pk=pk)
+    
+    # Check if user owns the collection
+    if request.user != collection.user:
+        return JsonResponse({'success': False, 'message': 'У вас нет прав для переименования этой коллекции.'})
+    
+    if request.method == 'POST':
+        new_name = request.POST.get('new_name', '').strip()
+        
+        if not new_name:
+            return JsonResponse({'success': False, 'message': 'Название коллекции не может быть пустым.'})
+        
+        if new_name == collection.name:
+            return JsonResponse({'success': False, 'message': 'Новое название должно отличаться от текущего.'})
+        
+        # Check if name already exists for this user
+        if Collection.objects.filter(user=request.user, name=new_name).exclude(pk=pk).exists():
+            return JsonResponse({'success': False, 'message': 'Коллекция с таким названием уже существует.'})
+        
+        old_name = collection.name
+        collection.name = new_name
+        collection.save()
+        
+        # Log the action
+        from .utils import log_user_activity
+        log_user_activity(
+            user=request.user,
+            action_type='edit_collection',
+            description=f'Коллекция "{old_name}" переименована в "{new_name}"',
+            request=request,
+            related_collection=collection,
+            is_successful=True
+        )
+        
+        return JsonResponse({
+            'success': True, 
+            'message': f'Коллекция успешно переименована в "{new_name}".'
+        })
+    
+    return JsonResponse({'success': False, 'message': 'Неверный запрос.'})
+
+
 def logout_view(request):
     """Logout view"""
     if request.user.is_authenticated:
@@ -890,7 +969,7 @@ def archive_announcement(request, pk):
     # Check if user owns the announcement
     if request.user != announcement.user:
         messages.error(request, 'У вас нет прав для архивирования этого объявления.')
-        return redirect('announcement_detail', pk=pk)
+        return redirect('account')
     
     if request.method == 'POST':
         announcement.is_archived = True
@@ -908,9 +987,9 @@ def archive_announcement(request, pk):
         )
         
         messages.success(request, 'Объявление помещено в архив.')
-        return redirect('announcement_detail', pk=pk)
+        return redirect('account')
     
-    return redirect('announcement_detail', pk=pk)
+    return redirect('account')
 
 
 @login_required
@@ -921,7 +1000,7 @@ def unarchive_announcement(request, pk):
     # Check if user owns the announcement
     if request.user != announcement.user:
         messages.error(request, 'У вас нет прав для разархивирования этого объявления.')
-        return redirect('announcement_detail', pk=pk)
+        return redirect('account')
     
     if request.method == 'POST':
         announcement.is_archived = False
@@ -939,7 +1018,7 @@ def unarchive_announcement(request, pk):
         )
         
         messages.success(request, 'Объявление восстановлено из архива.')
-        return redirect('announcement_detail', pk=pk)
+        return redirect('account')
     
-    return redirect('announcement_detail', pk=pk)
+    return redirect('account')
 

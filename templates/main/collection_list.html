@@ -23,17 +23,17 @@
                         
                         <p class="text-muted">
                             <i class="bi bi-house"></i>
-                            {{ collection.items.count }} propert{{ collection.items.count|pluralize:"y,ies" }}
+                            {{ collection.items.count }} объявлени{{ collection.items.count|pluralize:"е,я,й" }}
                         </p>
                         
                         <p class="text-muted small">
                             <i class="bi bi-calendar"></i>
-                            Created {{ collection.created_at|date:"M d, Y" }}
+                            Создано {{ collection.created_at|date:"d M Y" }}
                         </p>
                         
                         <div class="d-flex gap-2 mt-3">
                             <a href="{% url 'collection_detail' collection.pk %}" class="btn btn-outline-primary flex-fill">
-                                <i class="bi bi-eye"></i> View
+                                <i class="bi bi-eye"></i> Смотреть
                             </a>
                             <a href="{% url 'collection_delete' collection.pk %}" class="btn btn-outline-danger">
                                 <i class="bi bi-trash"></i>
@@ -47,27 +47,27 @@
 
     <!-- Pagination -->
     {% if is_paginated %}
-        <nav aria-label="Collections pagination">
+        <nav aria-label="Навигация по коллекциям">
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1">First</a>
+                        <a class="page-link" href="?page=1">Первая</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
                     </li>
                 {% endif %}
 
                 <li class="page-item active">
-                    <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
                 </li>
 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
                     </li>
                 {% endif %}
             </ul>

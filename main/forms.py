@@ -25,6 +25,16 @@ class PhoneLoginForm(AuthenticationForm):
         })
     )
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if username:
+            phone_digits = ''.join(filter(str.isdigit, username))
+            if phone_digits.startswith('7') and len(phone_digits) == 11:
+                username = '+' + phone_digits
+            else:
+                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(XXX)-XXX-XXXX")
+        return username
+
 
 class UserRegistrationForm(forms.ModelForm):
     """User registration form"""
@@ -721,7 +731,8 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.CheckboxInput(attrs={
             'class': 'form-check-input'
-        })
+        }),
+        label="Показать только предложения где партнер дополнительно платит вознаграждение"
     )
     
     # Фильтр по агентству
@@ -845,4 +856,44 @@ class ChangeAgencyForm(forms.Form):
             'agency': agency,
             'created': created
         }
+
+
+class ChangePasswordForm(forms.Form):
+    old_password = forms.CharField(
+        label="Старый пароль",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Введите старый пароль'})
+    )
+    new_password1 = forms.CharField(
+        label="Новый пароль",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Введите новый пароль'})
+    )
+    new_password2 = forms.CharField(
+        label="Подтвердите новый пароль",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Повторите новый пароль'})
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_old_password(self):
+        old_password = self.cleaned_data.get('old_password')
+        if not self.user.check_password(old_password):
+            raise forms.ValidationError('Старый пароль введён неверно.')
+        return old_password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get('new_password1')
+        new_password2 = cleaned_data.get('new_password2')
+        if new_password1 and new_password2 and new_password1 != new_password2:
+            self.add_error('new_password2', 'Пароли не совпадают.')
+        return cleaned_data
+
+    def save(self, commit=True):
+        new_password = self.cleaned_data['new_password1']
+        self.user.set_password(new_password)
+        if commit:
+            self.user.save()
+        return self.user
 

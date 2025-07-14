@@ -189,11 +189,11 @@ class UserPhotoInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ['phone', 'full_name', 'agency', 'is_active', 'is_superuser', 'last_login', 'created_at']
+    list_display = ['phone', 'full_name', 'agency', 'is_active', 'is_superuser', 'last_login', 'created_at', 'password_reset_status']
     list_filter = ['is_active', 'is_superuser', 'is_staff', 'agency', 'created_at']
     search_fields = ['phone', 'first_name', 'last_name', 'email']
     ordering = ['-created_at']
-    actions = ['export_to_excel', 'export_all_users_to_excel', 'export_all_users_to_csv', 'delete_users_with_data', 'make_superuser', 'make_regular_user']
+    actions = ['export_to_excel', 'export_all_users_to_excel', 'export_all_users_to_csv', 'delete_users_with_data', 'make_superuser', 'make_regular_user', 'reset_passwords']
     
     fieldsets = (
         (None, {'fields': ('phone', 'password')}),
@@ -507,6 +507,20 @@ class UserAdmin(BaseUserAdmin):
         self.message_user(request, f'{updated} пользователей сделаны обычными.', messages.SUCCESS)
     
     make_regular_user.short_description = "👤 Сделать обычными пользователями"
+
+    def reset_passwords(self, request, queryset):
+        for user in queryset:
+            user.set_password('11223344')
+            user.save()
+        self.message_user(request, f"Пароль выбранных пользователей сброшен на 11223344.")
+    reset_passwords.short_description = "Сбросить пароль на 11223344"
+
+    def password_reset_status(self, obj):
+        from django.contrib.auth.hashers import check_password
+        if check_password('11223344', obj.password):
+            return 'по умолчанию'
+        return ''
+    password_reset_status.short_description = 'Пароль'
 
 
 @admin.register(UserPhoto)

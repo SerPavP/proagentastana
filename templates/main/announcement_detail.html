@@ -315,6 +315,18 @@
                                 </li>
                             </ul>
                         </div>
+                        
+                        <!-- Показываем информацию о коллекциях, если объявление уже добавлено -->
+                        {% if announcement_collections %}
+                            <div class="mt-2">
+                                <small class="text-success">
+                                    <i class="bi bi-bookmark-fill"></i> Уже в коллекциях: 
+                                    {% for collection in announcement_collections %}
+                                        <span class="badge bg-success">{{ collection.name }}</span>{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </small>
+                            </div>
+                        {% endif %}
                     {% endif %}
                     
                     <a href="{% url 'announcement_list' %}" class="btn btn-outline-secondary">
@@ -468,6 +480,9 @@ $(document).ready(function() {
                     // Close dropdown
                     var dropdown = bootstrap.Dropdown.getInstance($('.dropdown-toggle')[0]);
                     if (dropdown) dropdown.hide();
+                    
+                    // Update collections info
+                    updateCollectionsInfo();
                 } else {
                     // Show error message
                     showMessage(data.message, 'warning');
@@ -579,6 +594,12 @@ $(document).ready(function() {
         setTimeout(function() {
             alert.alert('close');
         }, 5000);
+    }
+    
+    // Function to update collections info
+    function updateCollectionsInfo() {
+        // Reload the page to get updated collections info
+        location.reload();
     }
 });
 </script>

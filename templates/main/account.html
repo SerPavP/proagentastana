@@ -48,6 +48,11 @@
                         <i class="bi bi-building"></i> Изменить агентство
                     </button>
                 </div>
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="bi bi-key"></i> Сменить пароль
+                    </button>
+                </div>
                 
                 <div class="row text-center">
                     <div class="col-6">
@@ -156,13 +161,24 @@
             </div>
         </div>
 
-        <!-- Recent Properties -->
+        <!-- Tab Navigation -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0"><i class="bi bi-house"></i> Последние недвижимости</h6>
-                <a href="{% url 'announcement_list' %}?user={{ user.id }}" class="btn btn-sm btn-outline-primary">Посмотреть все</a>
+            <div class="card-header">
+                <div class="btn-group w-100" role="group" aria-label="Account sections">
+                    <button type="button" class="btn btn-outline-primary active" id="propertiesTab" onclick="showTab('properties')">
+                        <i class="bi bi-house"></i> Недвижимости ({{ total_announcements }})
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="collectionsTab" onclick="showTab('collections')">
+                        <i class="bi bi-bookmark"></i> Коллекции ({{ total_collections }})
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="archivedTab" onclick="showTab('archived')">
+                        <i class="bi bi-archive"></i> Архивные ({{ archived_announcements.count }})
+                    </button>
+                </div>
             </div>
-            <div class="card-body">
+            
+            <!-- Properties Tab Content -->
+            <div class="card-body" id="propertiesContent">
                 {% if user_announcements %}
                     {% for announcement in user_announcements %}
                         <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
@@ -200,7 +216,20 @@
                             </div>
                             
                             <div class="text-end">
-                                <a href="{% url 'announcement_detail' announcement.pk %}" class="btn btn-sm btn-outline-primary">Смотреть</a>
+                                <div class="btn-group-vertical btn-group-sm" role="group">
+                                    <a href="{% url 'announcement_detail' announcement.pk %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Смотреть
+                                    </a>
+                                    <form method="post" action="{% url 'archive_announcement' announcement.pk %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Поместить объявление в архив?')">
+                                            <i class="bi bi-archive"></i> В архив
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'announcement_delete' announcement.pk %}" class="btn btn-outline-danger" onclick="return confirm('Удалить объявление навсегда?')">
+                                        <i class="bi bi-trash"></i> Удалить
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     {% endfor %}
@@ -208,19 +237,13 @@
                     <p class="text-muted text-center py-3">Нету недвижимости еще. <a href="{% url 'announcement_create' %}">Добавьте свою первую недвижимость</a></p>
                 {% endif %}
             </div>
-        </div>
 
-        <!-- Recent Collections -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0"><i class="bi bi-bookmark"></i> Последние коллекции</h6>
-                <a href="{% url 'collection_list' %}" class="btn btn-sm btn-outline-primary">Посмотреть все</a>
-            </div>
-            <div class="card-body">
+            <!-- Collections Tab Content -->
+            <div class="card-body" id="collectionsContent" style="display: none;">
                 {% if user_collections %}
                     {% for collection in user_collections %}
                         <div class="d-flex align-items-center justify-content-between mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
-                            <div>
+                            <div class="flex-grow-1">
                                 <h6 class="mb-1">
                                     <i class="bi bi-bookmark-fill text-primary"></i>
                                     {{ collection.name }}
@@ -230,21 +253,28 @@
                                     • Создано {{ collection.created_at|date:"d M" }}
                                 </p>
                             </div>
-                            <a href="{% url 'collection_detail' collection.pk %}" class="btn btn-sm btn-outline-primary">Смотреть</a>
+                            <div class="text-end">
+                                <div class="btn-group-vertical btn-group-sm" role="group">
+                                    <a href="{% url 'collection_detail' collection.pk %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Смотреть
+                                    </a>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="renameCollection({{ collection.pk }}, '{{ collection.name }}')">
+                                        <i class="bi bi-pencil"></i> Переименовать
+                                    </button>
+                                    <a href="{% url 'collection_delete' collection.pk %}" class="btn btn-outline-danger" onclick="return confirm('Удалить коллекцию навсегда?')">
+                                        <i class="bi bi-trash"></i> Удалить
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     {% endfor %}
                 {% else %}
                     <p class="text-muted text-center py-3">Нет коллекций еще. <a href="{% url 'collection_create' %}">Создайте свою первую коллекцию</a></p>
                 {% endif %}
             </div>
-        </div>
 
-        <!-- Архивные объявления -->
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-archive"></i> Архивные объявления</h6>
-            </div>
-            <div class="card-body">
+            <!-- Archived Tab Content -->
+            <div class="card-body" id="archivedContent" style="display: none;">
                 {% if archived_announcements %}
                     {% for announcement in archived_announcements %}
                         <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
@@ -283,7 +313,20 @@
                             </div>
                             
                             <div class="text-end">
-                                <a href="{% url 'announcement_detail' announcement.pk %}" class="btn btn-sm btn-outline-secondary">Смотреть</a>
+                                <div class="btn-group-vertical btn-group-sm" role="group">
+                                    <a href="{% url 'announcement_detail' announcement.pk %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Смотреть
+                                    </a>
+                                    <form method="post" action="{% url 'unarchive_announcement' announcement.pk %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-success" onclick="return confirm('Восстановить объявление из архива?')">
+                                            <i class="bi bi-archive"></i> В активное
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'announcement_delete' announcement.pk %}" class="btn btn-outline-danger" onclick="return confirm('Удалить объявление навсегда?')">
+                                        <i class="bi bi-trash"></i> Удалить
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     {% endfor %}
@@ -366,6 +409,77 @@
 </style>
 
 <script>
+// Tab switching functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    document.getElementById('propertiesContent').style.display = 'none';
+    document.getElementById('collectionsContent').style.display = 'none';
+    document.getElementById('archivedContent').style.display = 'none';
+    
+    // Remove active class from all tabs
+    document.getElementById('propertiesTab').classList.remove('active');
+    document.getElementById('collectionsTab').classList.remove('active');
+    document.getElementById('archivedTab').classList.remove('active');
+    
+    // Show selected tab content
+    document.getElementById(tabName + 'Content').style.display = 'block';
+    
+    // Add active class to selected tab
+    document.getElementById(tabName + 'Tab').classList.add('active');
+}
+
+// Function to rename collection
+function renameCollection(collectionId, currentName) {
+    const modal = new bootstrap.Modal(document.getElementById('renameCollectionModal'));
+    const nameInput = document.getElementById('newCollectionName');
+    const form = document.getElementById('renameCollectionForm');
+    
+    // Set current name as default value
+    nameInput.value = currentName;
+    
+    // Set form action
+    form.action = `/collection/${collectionId}/rename/`;
+    
+    // Show modal
+    modal.show();
+}
+
+// Handle collection rename form submission
+document.getElementById('renameCollectionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('renameCollectionModal')).hide();
+            
+            // Show success message
+            showToast(data.message, 'success');
+            
+            // Reload page to show updated name
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Произошла ошибка при переименовании коллекции', 'error');
+    });
+});
+
 // Подтверждение удаления аккаунта
 document.getElementById('deleteConfirmInput').addEventListener('input', function() {
     const confirmBtn = document.getElementById('confirmDeleteBtn');
@@ -572,6 +686,37 @@ function showToast(message, type = 'info') {
     </div>
 </div>
 
+<!-- Модальное окно для переименования коллекции -->
+<div class="modal fade" id="renameCollectionModal" tabindex="-1" aria-labelledby="renameCollectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="renameCollectionModalLabel">
+                    <i class="bi bi-pencil"></i> Переименовать коллекцию
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="renameCollectionForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newCollectionName" class="form-label">Новое название коллекции</label>
+                        <input type="text" class="form-control" id="newCollectionName" name="new_name" required maxlength="255">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Переименовать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 // Автодополнение для агентства
 document.addEventListener('DOMContentLoaded', function() {
@@ -669,6 +814,43 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: #f8f9fa;
 }
 </style>
+
+<!-- Модальное окно для смены пароля -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="changePasswordModalLabel"><i class="bi bi-key"></i> Сменить пароль</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <form method="post" action="" autocomplete="off">
+        {% csrf_token %}
+        <div class="modal-body">
+          {{ change_password_form.non_field_errors }}
+          <div class="mb-3">
+            {{ change_password_form.old_password.label_tag }}
+            {{ change_password_form.old_password }}
+            {{ change_password_form.old_password.errors }}
+          </div>
+          <div class="mb-3">
+            {{ change_password_form.new_password1.label_tag }}
+            {{ change_password_form.new_password1 }}
+            {{ change_password_form.new_password1.errors }}
+          </div>
+          <div class="mb-3">
+            {{ change_password_form.new_password2.label_tag }}
+            {{ change_password_form.new_password2 }}
+            {{ change_password_form.new_password2.errors }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary" name="change_password">Сменить пароль</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 

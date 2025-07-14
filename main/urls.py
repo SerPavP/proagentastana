@@ -21,6 +21,7 @@ urlpatterns = [
     path('collection/<int:pk>/', views.CollectionDetailView.as_view(), name='collection_detail'),
     path('collection/create/', views.CollectionCreateView.as_view(), name='collection_create'),
     path('collection/<int:pk>/delete/', views.CollectionDeleteView.as_view(), name='collection_delete'),
+    path('collection/<int:pk>/rename/', views.rename_collection, name='rename_collection'),
     
     # AJAX URLs for collection management
     path('ajax/add-to-collection/', views.add_to_collection, name='add_to_collection'),

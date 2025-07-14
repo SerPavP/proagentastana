@@ -9,20 +9,19 @@ class PhoneAuthBackend(BaseBackend):
     instead of username.
     """
     
-    def authenticate(self, request, phone=None, password=None, **kwargs):
+    def authenticate(self, request, username=None, password=None, **kwargs):
         """
         Authenticate a user based on phone number and password.
         """
+        phone = username  # username — это и есть телефон
         if phone is None or password is None:
             return None
-            
         try:
             user = User.objects.get(phone=phone)
             if user.check_password(password) and user.is_active:
                 return user
         except User.DoesNotExist:
             return None
-        
         return None
     
     def get_user(self, user_id):
