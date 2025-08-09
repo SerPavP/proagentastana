@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9nkjvxva0rm#$s@n0j7+vuj+s)k%3=)n-vb!8j1kvzzjl08_y&'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-9nkjvxva0rm#$s@n0j7+vuj+s)k%3=)n-vb!8j1kvzzjl08_y&')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 
 # Application definition
@@ -44,12 +45,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'main.middleware.DatabaseErrorMiddleware',  # Обработка ошибок курсора базы данных
     'main.middleware.LoginRequiredMiddleware',  # Требование авторизации для всех страниц
     'main.middleware.UserActivityMiddleware',  # Отслеживание активности пользователей
     'main.middleware.UserSessionMiddleware',  # Отслеживание сессий пользователей
@@ -79,34 +82,73 @@ WSGI_APPLICATION = 'proagentastana.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database configuration - supports both PostgreSQL and SQLite
-import os
-db_name = config('DB_NAME', default='proagentastana_db')
+# Database configuration - supports Neon DATABASE_URL and fallback options
+DATABASE_URL = config('DATABASE_URL', default=None)
 
-if db_name.endswith('.sqlite3'):
-    # SQLite configuration
+if DATABASE_URL:
+    # Use DATABASE_URL (recommended for Neon)
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / db_name,
-        }
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+    
+    # Add Neon-specific configurations for stability
+    DATABASES['default']['CONN_MAX_AGE'] = 60  # Enable connection reuse for performance
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True  # Enable connection health checks
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+        'connect_timeout': 10,
+        'application_name': 'proagentastana',
+        'keepalives_idle': 600,
+        'keepalives_interval': 30,
+        'keepalives_count': 3,
+        # Дополнительные настройки для стабильности
+        'server_side_binding': True,
     }
 else:
-    # PostgreSQL configuration for Neon
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='proagentastana_db'),
-            'USER': config('DB_USER', default='proagentastana_user'),
-            'PASSWORD': config('DB_PASSWORD', default='P9dsdM'),
-            'HOST': config('DB_HOST', default='127.0.0.1'),
-            'PORT': config('DB_PORT', default='5433'),
-            'OPTIONS': {
-                'sslmode': config('DB_SSLMODE', default='require'),
-            },
+    # Fallback to individual parameters or SQLite
+    db_name = config('DB_NAME', default='proagentastana_db')
+    
+    if db_name.endswith('.sqlite3'):
+        # SQLite configuration
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / db_name,
+            }
+        }
+    else:
+        # PostgreSQL configuration with individual parameters
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': config('DB_NAME', default='proagentastana_db'),
+                'USER': config('DB_USER', default='proagentastana_user'),
+                'PASSWORD': config('DB_PASSWORD', default='P9dsdM'),
+                'HOST': config('DB_HOST', default='127.0.0.1'),
+                'PORT': config('DB_PORT', default='5433'),
+                'OPTIONS': {
+                    'sslmode': config('DB_SSLMODE', default='require'),
+                },
+            }
+        }
+
+
+# Кэширование для производительности
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 минут
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
         }
     }
+}
 
+# Время жизни сессий (для стабильности используем базу данных)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Используем БД вместо кэша
+SESSION_COOKIE_AGE = 86400  # 24 часа
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Сессия не истекает при закрытии браузера
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -156,6 +198,9 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# WhiteNoise configuration for serving static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -163,17 +208,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Image optimization settings
 IMAGE_OPTIMIZATION = {
     'ANNOUNCEMENT_PHOTOS': {
-        'MAX_WIDTH': 1920,
-        'MAX_HEIGHT': 1080,
-        'QUALITY': 85,
+        'MAX_WIDTH': 1600,  # Уменьшено с 1920
+        'MAX_HEIGHT': 900,  # Уменьшено с 1080
+        'QUALITY': 80,      # Уменьшено с 85 для лучшего сжатия
         'THUMBNAIL_SIZE': (400, 300),
     },
     'USER_PHOTOS': {
-        'MAX_WIDTH': 800,
-        'MAX_HEIGHT': 800,
-        'QUALITY': 90,
+        'MAX_WIDTH': 600,   # Уменьшено с 800
+        'MAX_HEIGHT': 600,  # Уменьшено с 800
+        'QUALITY': 85,      # Уменьшено с 90
     },
-    'MAX_FILE_SIZE': 10 * 1024 * 1024,  # 10MB
+    'MAX_FILE_SIZE': 15 * 1024 * 1024,  # Увеличено до 15MB для больших исходных файлов
 }
 
 # Default primary key field type
@@ -189,4 +234,23 @@ SESSION_SAVE_EVERY_REQUEST = True
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
+    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=True, cast=bool)
+    SECURE_CONTENT_TYPE_NOSNIFF = config('SECURE_CONTENT_TYPE_NOSNIFF', default=True, cast=bool)
+    SECURE_BROWSER_XSS_FILTER = config('SECURE_BROWSER_XSS_FILTER', default=True, cast=bool)
+    X_FRAME_OPTIONS = config('X_FRAME_OPTIONS', default='DENY')
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if config('CSRF_TRUSTED_ORIGINS', default='') else []
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 

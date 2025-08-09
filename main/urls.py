@@ -27,6 +27,7 @@ urlpatterns = [
     path('ajax/add-to-collection/', views.add_to_collection, name='add_to_collection'),
     path('ajax/remove-from-collection/', views.remove_from_collection, name='remove_from_collection'),
     path('ajax/create-collection/', views.create_collection_ajax, name='create_collection_ajax'),
+    path('ajax/announcement-collections/<int:announcement_id>/', views.get_announcement_collections, name='get_announcement_collections'),
     
     # AJAX URLs for agency autocomplete
     path('ajax/agency-autocomplete/', views.agency_autocomplete, name='agency_autocomplete'),

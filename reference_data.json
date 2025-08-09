@@ -1,0 +1,864 @@
+[
+  {
+    "model": "main.microdistrict",
+    "pk": 10,
+    "fields": {
+      "code": "load_md",
+      "name": "Load Test District",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:40.684Z"
+    }
+  },
+  {
+    "model": "main.microdistrict",
+    "pk": 11,
+    "fields": {
+      "code": "almaty",
+      "name": "Алматы",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:40.760Z"
+    }
+  },
+  {
+    "model": "main.microdistrict",
+    "pk": 12,
+    "fields": {
+      "code": "baikonyr",
+      "name": "Байконыр",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:40.836Z"
+    }
+  },
+  {
+    "model": "main.microdistrict",
+    "pk": 13,
+    "fields": {
+      "code": "esil",
+      "name": "Есиль",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:40.910Z"
+    }
+  },
+  {
+    "model": "main.microdistrict",
+    "pk": 14,
+    "fields": {
+      "code": "nura",
+      "name": "Нура",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:40.984Z"
+    }
+  },
+  {
+    "model": "main.microdistrict",
+    "pk": 15,
+    "fields": {
+      "code": "test",
+      "name": "Прочее",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:41.058Z"
+    }
+  },
+  {
+    "model": "main.microdistrict",
+    "pk": 16,
+    "fields": {
+      "code": "saryarka",
+      "name": "Сарыарка",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:41.133Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 22,
+    "fields": {
+      "name": "Load Repair",
+      "code": "load_repair",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:39.862Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 23,
+    "fields": {
+      "name": "Не новый, но аккуратный ремонт",
+      "code": "neat",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:39.939Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 29,
+    "fields": {
+      "name": "Не новый, но аккуратный ремонт",
+      "code": "good_repair",
+      "is_active": true,
+      "created_at": "2025-07-22T01:47:10.749Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 24,
+    "fields": {
+      "name": "Новый ремонт",
+      "code": "new",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:40.015Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 28,
+    "fields": {
+      "name": "Новый ремонт",
+      "code": "new_repair",
+      "is_active": true,
+      "created_at": "2025-07-22T01:47:10.749Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 30,
+    "fields": {
+      "name": "Старый ремонт",
+      "code": "old_repair",
+      "is_active": true,
+      "created_at": "2025-07-22T01:47:10.749Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 25,
+    "fields": {
+      "name": "Старый ремонт",
+      "code": "old",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:40.089Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 26,
+    "fields": {
+      "name": "Черновая отделка",
+      "code": "raw",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:40.165Z"
+    }
+  },
+  {
+    "model": "main.repairtype",
+    "pk": 27,
+    "fields": {
+      "name": "Черновая отделка",
+      "code": "rough_finish",
+      "is_active": true,
+      "created_at": "2025-07-22T01:47:10.749Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 14,
+    "fields": {
+      "name": "Load Building",
+      "code": "load_building",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:38.967Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 15,
+    "fields": {
+      "name": "Деревянный",
+      "code": "wood",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:39.045Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 18,
+    "fields": {
+      "name": "Иной",
+      "code": "other",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:39.268Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 19,
+    "fields": {
+      "name": "Кирпичный",
+      "code": "brick",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:39.342Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 16,
+    "fields": {
+      "name": "Металлический",
+      "code": "steel",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:39.119Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 20,
+    "fields": {
+      "name": "Монолитный",
+      "code": "monolith",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:39.417Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 21,
+    "fields": {
+      "name": "Панельный",
+      "code": "panel",
+      "is_active": true,
+      "created_at": "2025-07-20T17:28:39.491Z"
+    }
+  },
+  {
+    "model": "main.buildingtype",
+    "pk": 17,
+    "fields": {
+      "name": "Смешанный",
+      "code": "mixed",
+      "is_active": false,
+      "created_at": "2025-07-20T17:28:39.193Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 45,
+    "fields": {
+      "code": "abu_dhabi_baiterek",
+      "name": "Абу Даби Плаза и Байтерек",
+      "created_at": "2025-07-20T17:28:41.731Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 46,
+    "fields": {
+      "code": "barys_astana_arena",
+      "name": "Барыс Арена и Астана Арена",
+      "created_at": "2025-07-20T17:28:41.808Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 47,
+    "fields": {
+      "code": "botanical_garden",
+      "name": "Ботанический сад",
+      "created_at": "2025-07-20T17:28:41.884Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 48,
+    "fields": {
+      "code": "akimat_museum",
+      "name": "Здание акимата (Музей первого Президента)",
+      "created_at": "2025-07-20T17:28:41.959Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 49,
+    "fields": {
+      "code": "nazarbayev_university",
+      "name": "Назарбаев Университет",
+      "created_at": "2025-07-20T17:28:42.033Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 50,
+    "fields": {
+      "code": "new_station",
+      "name": "Новый вокзал",
+      "created_at": "2025-07-20T17:28:42.108Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 51,
+    "fields": {
+      "code": "koktal_park",
+      "name": "Парк \"Коктал\"",
+      "created_at": "2025-07-20T17:28:42.182Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 52,
+    "fields": {
+      "code": "pyramid",
+      "name": "Пирамида",
+      "created_at": "2025-07-20T17:28:42.256Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 53,
+    "fields": {
+      "code": "presidential_park_left",
+      "name": "Президентский парк (Левый берег)",
+      "created_at": "2025-07-20T17:28:42.331Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 54,
+    "fields": {
+      "code": "presidential_park_right",
+      "name": "Президентский парк (Правый берег)",
+      "created_at": "2025-07-20T17:28:42.405Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 55,
+    "fields": {
+      "code": "artem_market",
+      "name": "Рынок Артём",
+      "created_at": "2025-07-20T17:28:42.481Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 56,
+    "fields": {
+      "code": "old_station",
+      "name": "Старый вокзал",
+      "created_at": "2025-07-20T17:28:42.555Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 57,
+    "fields": {
+      "code": "sphere_park",
+      "name": "Сфера Парк",
+      "created_at": "2025-07-20T17:28:42.629Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 58,
+    "fields": {
+      "code": "ellington_mall",
+      "name": "ТРК \"Эллингтон Молл\"",
+      "created_at": "2025-07-20T17:28:42.704Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 59,
+    "fields": {
+      "code": "eurasia_mall",
+      "name": "ТРЦ \"Евразия\"",
+      "created_at": "2025-07-20T17:28:42.779Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 60,
+    "fields": {
+      "code": "meeting_center",
+      "name": "ТЦ \"Встреча\"",
+      "created_at": "2025-07-20T17:28:42.853Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 61,
+    "fields": {
+      "code": "triathlon_park",
+      "name": "Триатлон Парк",
+      "created_at": "2025-07-20T17:28:42.928Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 62,
+    "fields": {
+      "code": "khan_shatyr",
+      "name": "Хан Шатыр",
+      "created_at": "2025-07-20T17:28:43.003Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 63,
+    "fields": {
+      "code": "central_mosque",
+      "name": "Центральная (Новая) Мечеть",
+      "created_at": "2025-07-20T17:28:43.078Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 64,
+    "fields": {
+      "code": "central_embankment",
+      "name": "Центральная набережная",
+      "created_at": "2025-07-20T17:28:43.152Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 65,
+    "fields": {
+      "code": "central_park",
+      "name": "Центральный парк",
+      "created_at": "2025-07-20T17:28:43.227Z"
+    }
+  },
+  {
+    "model": "main.landmark",
+    "pk": 66,
+    "fields": {
+      "code": "expo_mega",
+      "name": "ЭКСПО и ТРЦ \"MEGA Silkway\"",
+      "created_at": "2025-07-20T17:28:43.301Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 140,
+    "fields": {
+      "name": "Robust Test 1752568594.3559725",
+      "created_at": "2025-07-20T17:28:36.271Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 141,
+    "fields": {
+      "name": "Enhanced Test 6-1752568595.0255656",
+      "created_at": "2025-07-20T17:28:36.345Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 142,
+    "fields": {
+      "name": "Enhanced Test 1-1752568595.0280948",
+      "created_at": "2025-07-20T17:28:36.420Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 143,
+    "fields": {
+      "name": "Enhanced Test 2-1752568595.0312064",
+      "created_at": "2025-07-20T17:28:36.495Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 144,
+    "fields": {
+      "name": "Enhanced Test 8-1752568595.0387893",
+      "created_at": "2025-07-20T17:28:36.569Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 145,
+    "fields": {
+      "name": "Enhanced Test 14-1752568595.062033",
+      "created_at": "2025-07-20T17:28:36.644Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 146,
+    "fields": {
+      "name": "Enhanced Test 10-1752568595.0736814",
+      "created_at": "2025-07-20T17:28:36.717Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 147,
+    "fields": {
+      "name": "Enhanced Test 0-1752568595.0808046",
+      "created_at": "2025-07-20T17:28:36.792Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 148,
+    "fields": {
+      "name": "Enhanced Test 9-1752568595.0848176",
+      "created_at": "2025-07-20T17:28:36.867Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 149,
+    "fields": {
+      "name": "Enhanced Test 7-1752568595.0858102",
+      "created_at": "2025-07-20T17:28:36.942Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 150,
+    "fields": {
+      "name": "Enhanced Test 11-1752568595.0868106",
+      "created_at": "2025-07-20T17:28:37.016Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 151,
+    "fields": {
+      "name": "Enhanced Test 5-1752568595.0893943",
+      "created_at": "2025-07-20T17:28:37.091Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 152,
+    "fields": {
+      "name": "Enhanced Test 4-1752568595.1611094",
+      "created_at": "2025-07-20T17:28:37.166Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 153,
+    "fields": {
+      "name": "Enhanced Test 3-1752568595.2649112",
+      "created_at": "2025-07-20T17:28:37.240Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 154,
+    "fields": {
+      "name": "Enhanced Test 12-1752568595.366706",
+      "created_at": "2025-07-20T17:28:37.317Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 155,
+    "fields": {
+      "name": "Enhanced Test 13-1752568596.4012423",
+      "created_at": "2025-07-20T17:28:37.392Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 156,
+    "fields": {
+      "name": "Enhanced User Agency 7_1752568598731",
+      "created_at": "2025-07-20T17:28:37.468Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 157,
+    "fields": {
+      "name": "Enhanced User Agency 8_1752568598733",
+      "created_at": "2025-07-20T17:28:37.542Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 158,
+    "fields": {
+      "name": "Enhanced User Agency 6_1752568598765",
+      "created_at": "2025-07-20T17:28:37.617Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 159,
+    "fields": {
+      "name": "Enhanced User Agency 1_1752568598769",
+      "created_at": "2025-07-20T17:28:37.691Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 160,
+    "fields": {
+      "name": "Enhanced User Agency 9_1752568598815",
+      "created_at": "2025-07-20T17:28:37.765Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 161,
+    "fields": {
+      "name": "Enhanced User Agency 3_1752568598816",
+      "created_at": "2025-07-20T17:28:37.840Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 162,
+    "fields": {
+      "name": "Enhanced User Agency 4_1752568598816",
+      "created_at": "2025-07-20T17:28:37.916Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 163,
+    "fields": {
+      "name": "Enhanced User Agency 0_1752568598819",
+      "created_at": "2025-07-20T17:28:37.996Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 164,
+    "fields": {
+      "name": "Enhanced User Agency 2_1752568599024",
+      "created_at": "2025-07-20T17:28:38.071Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 165,
+    "fields": {
+      "name": "Enhanced User Agency 5_1752568599106",
+      "created_at": "2025-07-20T17:28:38.145Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 166,
+    "fields": {
+      "name": "Concurrent Agency 1",
+      "created_at": "2025-07-20T17:28:38.219Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 167,
+    "fields": {
+      "name": "Concurrent Agency 4",
+      "created_at": "2025-07-20T17:28:38.293Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 168,
+    "fields": {
+      "name": "Concurrent Agency 2",
+      "created_at": "2025-07-20T17:28:38.369Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 169,
+    "fields": {
+      "name": "Concurrent Agency 3",
+      "created_at": "2025-07-20T17:28:38.448Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 170,
+    "fields": {
+      "name": "Concurrent Agency 0",
+      "created_at": "2025-07-20T17:28:38.522Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 171,
+    "fields": {
+      "name": "Load Test Agency",
+      "created_at": "2025-07-20T17:28:38.596Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 119,
+    "fields": {
+      "name": "Robust Test 1752568414.1691322",
+      "created_at": "2025-07-20T17:28:34.695Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 120,
+    "fields": {
+      "name": "Enhanced Test 9-1752568414.895745",
+      "created_at": "2025-07-20T17:28:34.775Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 121,
+    "fields": {
+      "name": "Enhanced Test 3-1752568414.895745",
+      "created_at": "2025-07-20T17:28:34.849Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 122,
+    "fields": {
+      "name": "Enhanced Test 11-1752568414.8977504",
+      "created_at": "2025-07-20T17:28:34.923Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 123,
+    "fields": {
+      "name": "Enhanced Test 1-1752568414.9122972",
+      "created_at": "2025-07-20T17:28:34.998Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 124,
+    "fields": {
+      "name": "Enhanced Test 5-1752568414.9198823",
+      "created_at": "2025-07-20T17:28:35.073Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 125,
+    "fields": {
+      "name": "Enhanced Test 7-1752568414.9208796",
+      "created_at": "2025-07-20T17:28:35.147Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 126,
+    "fields": {
+      "name": "Тест Агентство",
+      "created_at": "2025-07-20T17:28:35.221Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 127,
+    "fields": {
+      "name": "Enhanced Test 6-1752568414.9238825",
+      "created_at": "2025-07-20T17:28:35.297Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 128,
+    "fields": {
+      "name": "Freedom",
+      "created_at": "2025-07-20T17:28:35.371Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 129,
+    "fields": {
+      "name": "prd",
+      "created_at": "2025-07-20T17:28:35.446Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 130,
+    "fields": {
+      "name": "Прочее",
+      "created_at": "2025-07-20T17:28:35.520Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 131,
+    "fields": {
+      "name": "Enhanced Test 10-1752568414.9379299",
+      "created_at": "2025-07-20T17:28:35.595Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 132,
+    "fields": {
+      "name": "Главное",
+      "created_at": "2025-07-20T17:28:35.669Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 133,
+    "fields": {
+      "name": "Enhanced Test 4-1752568414.9379299",
+      "created_at": "2025-07-20T17:28:35.744Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 134,
+    "fields": {
+      "name": "Enhanced Test 12-1752568414.951519",
+      "created_at": "2025-07-20T17:28:35.822Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 135,
+    "fields": {
+      "name": "Enhanced Test 14-1752568415.1678839",
+      "created_at": "2025-07-20T17:28:35.898Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 136,
+    "fields": {
+      "name": "Enhanced Test 8-1752568415.1993124",
+      "created_at": "2025-07-20T17:28:35.973Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 137,
+    "fields": {
+      "name": "Enhanced Test 13-1752568415.2059014",
+      "created_at": "2025-07-20T17:28:36.047Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 138,
+    "fields": {
+      "name": "Enhanced Test 0-1752568415.2308252",
+      "created_at": "2025-07-20T17:28:36.122Z"
+    }
+  },
+  {
+    "model": "main.agency",
+    "pk": 139,
+    "fields": {
+      "name": "Enhanced Test 2-1752568415.2308252",
+      "created_at": "2025-07-20T17:28:36.196Z"
+    }
+  }
+]

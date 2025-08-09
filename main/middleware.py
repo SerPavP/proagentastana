@@ -5,9 +5,11 @@ from django.utils.deprecation import MiddlewareMixin
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .models import UserActivity, UserSession
-from django.db import transaction
+from django.db import transaction, connection
+from django.http import HttpResponseRedirect
 import json
 import logging
+import psycopg2
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -237,4 +239,40 @@ class UserSessionMiddleware(MiddlewareMixin):
                 except Exception as e:
                     logger.error(f"Ошибка при обработке сессии: {e}")
         
+        return None
+
+
+class DatabaseErrorMiddleware(MiddlewareMixin):
+    """
+    Middleware для обработки ошибок курсора базы данных Neon
+    """
+    
+    def process_exception(self, request, exception):
+        """Обрабатывает исключения базы данных"""
+        
+        # Проверяем на ошибки курсора
+        if isinstance(exception, (psycopg2.InterfaceError, psycopg2.OperationalError)):
+            error_message = str(exception).lower()
+            
+            # Обрабатываем ошибки курсора
+            if 'cursor' in error_message and ('does not exist' in error_message or 'closed' in error_message):
+                logger.warning(f"Database cursor error: {exception}")
+                
+                # Закрываем соединение для переподключения
+                try:
+                    connection.close()
+                except:
+                    pass
+                
+                # Перенаправляем на ту же страницу для повторной попытки
+                messages.error(request, 'Временная проблема с подключением к базе данных. Пожалуйста, попробуйте снова.')
+                return HttpResponseRedirect(request.get_full_path())
+            
+            # Другие ошибки БД
+            elif 'connection' in error_message:
+                logger.error(f"Database connection error: {exception}")
+                messages.error(request, 'Проблема с подключением к базе данных. Обновите страницу.')
+                return HttpResponseRedirect(request.get_full_path())
+        
+        # Возвращаем None для других исключений
         return None 

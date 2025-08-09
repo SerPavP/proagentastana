@@ -81,12 +81,75 @@
         margin-top: 6px;
     }
 }
+
+/* Исправление z-index для dropdown меню */
+.navbar .dropdown-menu {
+    z-index: 9999 !important;
+}
+
+/* Уменьшаем z-index для sticky блока агента */
+.card.sticky-top {
+    z-index: 1020;
+}
+
+/* Убеждаемся что navbar имеет высокий z-index */
+.navbar {
+    z-index: 1030;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8">
+    <!-- Property Specifications Column -->
+    <div class="col-lg-2">
+        <div class="d-flex flex-column gap-3">
+            <div class="border rounded p-3 text-center">
+                <i class="bi bi-arrows-angle-expand text-primary" style="font-size: 1.5rem;"></i>
+                <div class="mt-2">
+                    <strong>{{ announcement.area }} м²</strong><br>
+                    <small class="text-muted">Площадь</small>
+                </div>
+            </div>
+            <div class="border rounded p-3 text-center">
+                <i class="bi bi-building text-primary" style="font-size: 1.5rem;"></i>
+                <div class="mt-2">
+                    <strong>
+                        {% if announcement.floor %}
+                            {{ announcement.floor }}
+                            {% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %}
+                        {% else %}
+                            Не указан
+                        {% endif %}
+                    </strong><br>
+                    <small class="text-muted">Этаж</small>
+                </div>
+            </div>
+            <div class="border rounded p-3 text-center">
+                <i class="bi bi-door-open text-primary" style="font-size: 1.5rem;"></i>
+                <div class="mt-2">
+                    <strong>{{ announcement.rooms_count }}</strong><br>
+                    <small class="text-muted">Комнат</small>
+                </div>
+            </div>
+            <div class="border rounded p-3 text-center">
+                <i class="bi bi-calendar text-primary" style="font-size: 1.5rem;"></i>
+                <div class="mt-2">
+                    <strong>
+                        {% if announcement.year_built %}
+                            {{ announcement.year_built }}
+                        {% else %}
+                            Не указан
+                        {% endif %}
+                    </strong><br>
+                    <small class="text-muted">Год постройки</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photos and Details Column -->
+    <div class="col-lg-6">
         <!-- Property Photos -->
         {% if announcement.photos.all %}
             <!-- Главное фото -->
@@ -144,76 +207,6 @@
                         {% if announcement.is_new_building %}
                             <span class="badge bg-success">Новостройка</span>
                         {% endif %}
-                    </div>
-                </div>
-
-                <!-- Property Specifications -->
-                <div class="row mb-4">
-                    <div class="col-md-2 col-6 text-center mb-3">
-                        <div class="border rounded p-3">
-                            <i class="bi bi-arrows-angle-expand text-primary" style="font-size: 1.5rem;"></i>
-                            <div class="mt-2">
-                                <strong>{{ announcement.area }} м²</strong><br>
-                                <small class="text-muted">Площадь</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2 col-6 text-center mb-3">
-                        <div class="border rounded p-3">
-                            <i class="bi bi-building text-primary" style="font-size: 1.5rem;"></i>
-                            <div class="mt-2">
-                                <strong>
-                                    {% if announcement.floor %}
-                                        {{ announcement.floor }}
-                                        {% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %}
-                                    {% else %}
-                                        Не указан
-                                    {% endif %}
-                                </strong><br>
-                                <small class="text-muted">Этаж</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2 col-6 text-center mb-3">
-                        <div class="border rounded p-3">
-                            <i class="bi bi-door-open text-primary" style="font-size: 1.5rem;"></i>
-                            <div class="mt-2">
-                                <strong>{{ announcement.rooms_count }}</strong><br>
-                                <small class="text-muted">Комнат</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2 col-6 text-center mb-3">
-                        <div class="border rounded p-3">
-                            <i class="bi bi-calendar text-primary" style="font-size: 1.5rem;"></i>
-                            <div class="mt-2">
-                                <strong>
-                                    {% if announcement.year_built %}
-                                        {{ announcement.year_built }}
-                                    {% else %}
-                                        Не указан
-                                    {% endif %}
-                                </strong><br>
-                                <small class="text-muted">Год постройки</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 col-12 text-center mb-3">
-                        <div class="border rounded p-3 h-100">
-                            <i class="bi bi-geo text-primary" style="font-size: 1.5rem;"></i>
-                            <div class="mt-2">
-                                {% if announcement.landmarks.all %}
-                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                        {% for landmark in announcement.landmarks.all %}
-                                            <span class="badge bg-success" style="font-size: 10px;">{{ landmark.name }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    <strong>Не указано</strong>
-                                {% endif %}
-                                <br><small class="text-muted">Дом находится рядом с</small>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -281,7 +274,7 @@
                     {% elif user.is_authenticated %}
                         <div class="dropdown">
                             <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-bookmark"></i> Добавить в коллекцию
+                                <i class="bi bi-person-circle"></i> Мой аккаунт
                             </button>
                             <ul class="dropdown-menu" id="collectionsDropdown" style="min-width: 250px;">
                                 <div id="existingCollections">
@@ -362,6 +355,18 @@
                 <h6>{{ announcement.user.first_name }} {{ announcement.user.last_name }}</h6>
                 <p class="text-muted small">{{ announcement.user.agency.name }}</p>
 
+                <!-- Landmarks Info -->
+                {% if announcement.landmarks.all %}
+                    <div class="mb-3 p-2 bg-light rounded">
+                        <h6 class="mb-2"><i class="bi bi-geo text-primary"></i> Дом находится рядом с</h6>
+                        <div class="d-flex flex-wrap gap-1 justify-content-center">
+                            {% for landmark in announcement.landmarks.all %}
+                                <span class="badge bg-success" style="font-size: 10px;">{{ landmark.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
                 <div class="d-grid gap-2">
                     <a href="tel:{{ announcement.user.phone }}" class="btn btn-primary">
                         <i class="bi bi-phone"></i> {{ announcement.user.phone }}
@@ -388,9 +393,9 @@
                             {% if announcement.commission_type == 'seller' %}
                                 Я беру с продавца, вы берете с покупателя
                             {% elif announcement.commission_type == 'split' %}
-                                Я беру с продавца и {% if announcement.commission_percentage %}{{ announcement.commission_percentage }}%{% endif %} с покупателя. Остальное ваше
+                                Я беру с продавца и {% if announcement.commission_amount %}{{ announcement.commission_amount|format_price }}{% else %}(сумма не указана){% endif %} тенге с покупателя. Остальное ваше
                             {% elif announcement.commission_type == 'buyer' %}
-                                Я беру с продавца, вы - с покупателя{% if announcement.commission_amount %} {{ announcement.commission_amount|format_price }} ₸{% endif %}{% if announcement.commission_bonus %}<br>и я дополнительно доплачиваю вам {{ announcement.commission_bonus|format_price }} ₸{% endif %}
+                                Я беру с продавца, вы - с покупателя и я дополнительно доплачиваю вам {% if announcement.commission_bonus %}{{ announcement.commission_bonus|format_price }} тенге{% else %}(сумма не указана){% endif %}
                             {% endif %}
                         </small>
                     </div>
@@ -458,6 +463,9 @@ $.ajaxSetup({
 });
 
 $(document).ready(function() {
+    // Update collections info on page load
+    updateCollectionsInfo();
+    
     // Handle add to collection
     $(document).on('click', '.add-to-collection', function(e) {
         e.preventDefault();
@@ -596,10 +604,33 @@ $(document).ready(function() {
         }, 5000);
     }
     
-    // Function to update collections info
+    // Function to update collections info dynamically
     function updateCollectionsInfo() {
-        // Reload the page to get updated collections info
-        location.reload();
+        // Update the collection button text to show which collections this announcement is in
+        $.ajax({
+            url: '{% url "get_announcement_collections" announcement.id %}',
+            method: 'GET',
+            success: function(data) {
+                if (data.collections && data.collections.length > 0) {
+                    // Show collection names in the dropdown button
+                    var collectionNames = data.collections.map(c => c.name).join(', ');
+                    if (collectionNames.length > 30) {
+                        collectionNames = collectionNames.substring(0, 30) + '...';
+                    }
+                    $('.dropdown-toggle').html(
+                        '<i class="bi bi-bookmark-check-fill text-success"></i> В коллекциях: ' + collectionNames
+                    );
+                } else {
+                    // Reset to default state
+                    $('.dropdown-toggle').html(
+                        '<i class="bi bi-person-circle"></i> Мой аккаунт'
+                    );
+                }
+            },
+            error: function() {
+                console.log('Не удалось обновить информацию о коллекциях');
+            }
+        });
     }
 });
 </script>

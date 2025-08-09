@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.validators import RegexValidator
@@ -177,8 +178,8 @@ class AnnouncementForm(forms.ModelForm):
     )
     
     street = forms.CharField(
-        required=True,
-        label="Улица *",
+        required=False,
+        label="Улица",
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Введите название улицы'
@@ -186,8 +187,8 @@ class AnnouncementForm(forms.ModelForm):
     )
     
     building_no = forms.CharField(
-        required=True,
-        label="Номер дома *",
+        required=False,
+        label="Номер дома",
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Введите номер дома'
@@ -294,74 +295,33 @@ class AnnouncementForm(forms.ModelForm):
     class Meta:
         model = Announcement
         fields = [
-            'rooms_count', 'price', 'repair_status', 'building_type',
-            'year_built', 'is_new_building', 'floor', 'total_floors',
-            'area', 'description', 'landmarks', 'krisha_link', 'commission_type',
-            'commission_percentage', 'commission_amount', 'commission_bonus'
+            'rooms_count', 'price', 'area', 'floor', 'total_floors', 'year_built',
+            'description', 'krisha_link', 'commission_type', 'commission_percentage', 
+            'commission_amount', 'commission_bonus'
         ]
+        
+        widgets = {
+            'rooms_count': forms.Select(choices=[(i, f"{i} комнаты" if i != 1 else "1 комната") for i in range(1, 6)], attrs={'class': 'form-select'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'area': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': 1}),
+            'floor': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'total_floors': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'year_built': forms.NumberInput(attrs={'class': 'form-control', 'min': 1900, 'max': 2030}),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Опишите квартиру: особенности планировки, состояние, мебель, инфраструктура...'
+            }),
+        }
+        
         labels = {
             'rooms_count': 'Количество комнат *',
             'price': 'Цена *',
-            'year_built': 'Год постройки *',
-            'is_new_building': 'Новостройка',
+            'area': 'Площадь (м²) *',
             'floor': 'Этаж *',
-            'total_floors': 'Всего этажей *',
-            'area': 'Площадь *',
-            'description': 'Описание *',
-            'landmarks': 'Дом находится рядом с:'
-        }
-        widgets = {
-            'rooms_count': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1,
-                'max': 10,
-                'placeholder': 'Введите количество комнат',
-                'required': True
-            }),
-            'price': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите цену в тенге',
-                'required': True,
-                'inputmode': 'numeric'
-            }),
-            'year_built': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1900,
-                'max': 2030,
-                'placeholder': 'Введите год постройки',
-                'required': True
-            }),
-            'is_new_building': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            }),
-            'floor': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1,
-                'placeholder': 'Этаж',
-                'required': True
-            }),
-            'total_floors': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1,
-                'placeholder': 'Всего этажей',
-                'required': True
-            }),
-            'area': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': 0,
-                'placeholder': 'Введите площадь в м²',
-                'required': True
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 4,
-                'placeholder': 'Введите описание недвижимости',
-                'required': True
-            }),
-            'landmarks': forms.CheckboxSelectMultiple(attrs={
-                'class': 'form-check-input'
-            })
+            'total_floors': 'Этажность дома *',
+            'year_built': 'Год постройки *',
+            'description': 'Описание',  # Убираем звездочку - теперь не обязательное
         }
 
     def __init__(self, *args, **kwargs):
@@ -428,11 +388,56 @@ class AnnouncementForm(forms.ModelForm):
         
         super().__init__(*args, **kwargs)
         
-        # Set querysets for model choice fields
-        self.fields['microdistrict'].queryset = Microdistrict.objects.filter(is_active=True).order_by('name')
-        self.fields['complex_name'].queryset = ResidentialComplex.objects.filter(is_active=True).order_by('name')
-        self.fields['repair_status'].queryset = RepairType.objects.filter(is_active=True).order_by('name')
-        self.fields['building_type'].queryset = BuildingType.objects.filter(is_active=True).order_by('name')
+        # 🚀 Set cached querysets for model choice fields
+        from django.core.cache import cache
+        
+        # Кэшированный queryset для микрорайонов
+        microdistrict_qs_key = 'announcement_form_microdistrict_qs_v2'
+        microdistrict_qs = cache.get(microdistrict_qs_key)
+        if microdistrict_qs is None:
+            microdistrict_qs = list(Microdistrict.objects.filter(is_active=True).order_by('name'))
+            cache.set(microdistrict_qs_key, microdistrict_qs, 3600)  # 1 час
+        self.fields['microdistrict'].queryset = Microdistrict.objects.filter(
+            pk__in=[obj.pk for obj in microdistrict_qs]
+        ).order_by('name')
+        
+        # Кэшированный queryset для ЖК: сначала русские названия (А-Я), потом английские (A-Z)
+        complex_qs_key = 'announcement_form_complex_qs_v2'
+        complex_qs = cache.get(complex_qs_key)
+        if complex_qs is None:
+            complex_qs = list(ResidentialComplex.objects.filter(is_active=True).extra(
+                select={'name_sort': "CASE WHEN name ~ '^[А-Яа-я]' THEN '1' || name ELSE '2' || name END"}
+            ).order_by('name_sort'))
+            cache.set(complex_qs_key, complex_qs, 3600)
+        self.fields['complex_name'].queryset = ResidentialComplex.objects.filter(
+            pk__in=[obj.pk for obj in complex_qs]
+        ).extra(
+            select={'name_sort': "CASE WHEN name ~ '^[А-Яа-я]' THEN '1' || name ELSE '2' || name END"}
+        ).order_by('name_sort')
+        
+        # Кэшированный queryset для типов ремонта
+        repair_qs_key = 'announcement_form_repair_qs_v2'
+        repair_qs = cache.get(repair_qs_key)
+        if repair_qs is None:
+            repair_qs = list(RepairType.objects.filter(is_active=True).order_by('name'))
+            cache.set(repair_qs_key, repair_qs, 3600)
+        self.fields['repair_status'].queryset = RepairType.objects.filter(
+            pk__in=[obj.pk for obj in repair_qs]
+        ).order_by('name')
+        
+        # Кэшированный queryset для типов домов: "иной" вверху, остальные по алфавиту
+        building_type_qs_key = 'announcement_form_building_type_qs_v2'
+        building_type_qs = cache.get(building_type_qs_key)
+        if building_type_qs is None:
+            building_type_qs = list(BuildingType.objects.filter(is_active=True).extra(
+                select={'is_other': "CASE WHEN LOWER(name) = 'иной' THEN 0 ELSE 1 END"}
+            ).order_by('is_other', 'name'))
+            cache.set(building_type_qs_key, building_type_qs, 3600)
+        self.fields['building_type'].queryset = BuildingType.objects.filter(
+            pk__in=[obj.pk for obj in building_type_qs]
+        ).extra(
+            select={'is_other': "CASE WHEN LOWER(name) = 'иной' THEN 0 ELSE 1 END"}
+        ).order_by('is_other', 'name')
 
     def get_address_data(self):
         """Extract address data from cleaned form data"""
@@ -562,23 +567,14 @@ class SearchForm(forms.Form):
         ('5+', '5+'),
     ]
     
-    # Микрорайон
+    # Микрорайон - будет заполнен динамически в __init__
     MICRODISTRICT_CHOICES = [
         ('', 'Выберите микрорайон'),
-        ('almaty', 'Алматы'),
-        ('baikonyr', 'Байконыр'),
-        ('esil', 'Есиль'),
-        ('saryarka', 'Сарыарка'),
-        ('nura', 'Нура'),
     ]
     
-    # Тип дома - выпадающий список
+    # Тип дома - будет заполнен динамически в __init__
     BUILDING_TYPE_CHOICES = [
         ('', 'Выберите тип дома'),
-        ('кирпичный', 'Кирпичный'),
-        ('панельный', 'Панельный'),
-        ('монолитный', 'Монолитный'),
-        ('иной', 'Иной'),
     ]
     
     # Количество комнат - множественный выбор
@@ -783,20 +779,45 @@ class SearchForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Динамически заполняем choices для жилых комплексов
-        complex_choices = [('', 'Все жилые комплексы')]
+        # Импортируем модели
+        from .models import Microdistrict, BuildingType, ResidentialComplex
+        from django.core.cache import cache
         
-        # Получаем уникальные названия жилых комплексов из базы данных
-        from .models import Address
-        complexes = Address.objects.filter(
-            complex_name__isnull=False
-        ).exclude(
-            complex_name__exact=''
-        ).values_list('complex_name', flat=True).distinct().order_by('complex_name')
+        # 🚀 Кэшированные choices для микрорайонов
+        microdistrict_choices_key = 'search_form_microdistrict_choices_v2'
+        microdistrict_choices = cache.get(microdistrict_choices_key)
+        if not microdistrict_choices:
+            microdistrict_choices = [('', 'Выберите микрорайон')]
+            microdistricts = Microdistrict.objects.filter(is_active=True).order_by('name')
+            for microdistrict in microdistricts:
+                microdistrict_choices.append((microdistrict.name, microdistrict.name))
+            cache.set(microdistrict_choices_key, microdistrict_choices, 3600)  # 1 час
+        self.fields['microdistrict'].choices = microdistrict_choices
         
-        for complex_name in complexes:
-            complex_choices.append((complex_name, complex_name))
-            
+        # 🚀 Кэшированные choices для типов домов с сортировкой "иной" вверху
+        building_type_choices_key = 'search_form_building_type_choices_v2'
+        building_type_choices = cache.get(building_type_choices_key)
+        if not building_type_choices:
+            building_type_choices = [('', 'Выберите тип дома')]
+            building_types = BuildingType.objects.filter(is_active=True).extra(
+                select={'is_other': "CASE WHEN LOWER(name) = 'иной' THEN 0 ELSE 1 END"}
+            ).order_by('is_other', 'name')
+            for building_type in building_types:
+                building_type_choices.append((building_type.name, building_type.name))
+            cache.set(building_type_choices_key, building_type_choices, 3600)  # 1 час
+        self.fields['building_type'].choices = building_type_choices
+        
+        # 🚀 Кэшированные choices для жилых комплексов
+        complex_choices_key = 'search_form_complex_choices_v2'
+        complex_choices = cache.get(complex_choices_key)
+        if not complex_choices:
+            complex_choices = [('', 'Все жилые комплексы')]
+            complexes = ResidentialComplex.objects.filter(is_active=True).extra(
+                select={'name_sort': "CASE WHEN name ~ '^[А-Яа-я]' THEN '1' || name ELSE '2' || name END"}
+            ).order_by('name_sort')
+            for complex_obj in complexes:
+                complex_choices.append((complex_obj.name, complex_obj.name))
+            cache.set(complex_choices_key, complex_choices, 3600)  # 1 час
         self.fields['complex_name'].choices = complex_choices
 
 

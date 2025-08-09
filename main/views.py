@@ -393,6 +393,19 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         try:
+            # Validate photo file sizes first
+            photos = self.request.FILES.getlist('photos')
+            max_file_size = 10 * 1024 * 1024  # 10MB
+            
+            for photo in photos:
+                if photo.size > max_file_size:
+                    messages.error(self.request, f'Файл {photo.name} слишком большой. Максимальный размер: 10MB')
+                    return self.form_invalid(form)
+                
+                if not photo.content_type.startswith('image/'):
+                    messages.error(self.request, f'Файл {photo.name} должен быть изображением')
+                    return self.form_invalid(form)
+            
             # Set the user
             form.instance.user = self.request.user
             
@@ -403,21 +416,27 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
             # Save the announcement using the form's save method (handles ManyToMany fields correctly)
             announcement = form.save()
             
-            # Handle photo uploads
-            photos = self.request.FILES.getlist('photos')
+            # Handle photo uploads with error handling
             photo_objects = []
-            for photo in photos:
-                photo_obj = PhotoService.save_announcement_photo(announcement, photo)
-                photo_objects.append(photo_obj)
+            for i, photo in enumerate(photos):
+                try:
+                    photo_obj = PhotoService.save_announcement_photo(announcement, photo)
+                    photo_objects.append(photo_obj)
+                except Exception as e:
+                    messages.warning(self.request, f'Ошибка загрузки фото {photo.name}: {str(e)}')
+                    continue
             
             # Handle setting main photo
             main_photo_id = self.request.POST.get('main_photo_id')
             if main_photo_id and main_photo_id.startswith('new_'):
                 # This is a new photo
-                index = int(main_photo_id.replace('new_', ''))
-                if index < len(photo_objects):
-                    photo_objects[index].is_main = True
-                    photo_objects[index].save()
+                try:
+                    index = int(main_photo_id.replace('new_', ''))
+                    if index < len(photo_objects):
+                        photo_objects[index].is_main = True
+                        photo_objects[index].save()
+                except (ValueError, IndexError):
+                    pass
             elif photo_objects:
                 # If no main photo is selected, make the first one main
                 photo_objects[0].is_main = True
@@ -431,11 +450,24 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
                 self.request
             )
             
-            messages.success(self.request, 'Announcement created successfully!')
+            messages.success(self.request, 'Объявление создано успешно!')
             return redirect('announcement_detail', pk=announcement.pk)
             
         except Exception as e:
-            messages.error(self.request, f'Error creating announcement: {str(e)}')
+            # Handle database errors
+            import traceback
+            error_message = str(e)
+            
+            # Check for specific database errors
+            if 'cursor' in error_message.lower() and 'does not exist' in error_message.lower():
+                messages.error(self.request, 'Ошибка подключения к базе данных. Попробуйте еще раз.')
+            elif 'too large' in error_message.lower() or '413' in error_message:
+                messages.error(self.request, 'Загружаемые файлы слишком большие. Уменьшите размер изображений.')
+            else:
+                messages.error(self.request, f'Ошибка при создании объявления: {error_message}')
+            
+            # Log the full error for debugging
+            print(f"Announcement creation error: {traceback.format_exc()}")
             return self.form_invalid(form)
 
 
@@ -736,6 +768,27 @@ def add_to_collection(request):
             return JsonResponse({'success': False, 'message': str(e)})
     
     return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+
+@login_required
+def get_announcement_collections(request, announcement_id):
+    """AJAX view to get collections that contain this announcement"""
+    try:
+        announcement = get_object_or_404(Announcement, pk=announcement_id)
+        
+        # Get collections that contain this announcement for current user
+        collections = Collection.objects.filter(
+            user=request.user,
+            collection_items__announcement=announcement
+        ).values('id', 'name')
+        
+        return JsonResponse({
+            'success': True,
+            'collections': list(collections)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
 
 
 @login_required

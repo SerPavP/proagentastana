@@ -1,0 +1,11 @@
+# Проверить кэш (с объяснением LocMemCache)
+python manage.py cache_management --stats
+
+# Протестировать производительность  
+python manage.py cache_management --test
+
+# Прогреть кэш
+python manage.py cache_management --warmup
+
+# Очистить кэш
+python manage.py cache_management --clear

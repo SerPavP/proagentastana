@@ -254,7 +254,7 @@
         </div>
     </div>
 
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data"{% if form.instance.pk %} data-editing="true"{% endif %}>
                     {% csrf_token %}
                     
                     <div class="row">
@@ -603,8 +603,48 @@ function validateForm() {
     return true;
 }
 
-// Управление фотографиями
-document.addEventListener('DOMContentLoaded', function() {
+    // Управление комиссией
+    function setupCommissionHandling() {
+        const commissionRadios = document.querySelectorAll('input[name="commission_type"]');
+        const commissionAmount = document.querySelector('input[name="commission_amount"]');
+        const commissionBonus = document.querySelector('input[name="commission_bonus"]');
+        
+        // Функция для показа/скрытия полей
+        function toggleCommissionFields() {
+            const selectedType = document.querySelector('input[name="commission_type"]:checked')?.value;
+            const isEditing = document.querySelector('form').hasAttribute('data-editing');
+            
+            if (commissionAmount) {
+                commissionAmount.style.display = selectedType === 'split' ? 'inline-block' : 'none';
+                // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
+                if (selectedType !== 'split' && !isEditing) {
+                    commissionAmount.value = '';
+                }
+            }
+            
+            if (commissionBonus) {
+                commissionBonus.style.display = selectedType === 'buyer' ? 'inline-block' : 'none';
+                // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
+                if (selectedType !== 'buyer' && !isEditing) {
+                    commissionBonus.value = '';
+                }
+            }
+        }
+        
+        // Обработчики событий для радиокнопок
+        commissionRadios.forEach(radio => {
+            radio.addEventListener('change', toggleCommissionFields);
+        });
+        
+        // Инициализация при загрузке
+        toggleCommissionFields();
+    }
+
+    // Управление фотографиями
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Инициализируем управление комиссией
+        setupCommissionHandling();
     
     // Устанавливаем правильное значение для радиокнопок commission_type при редактировании
     {% if form.instance.pk and form.instance.commission_type %}
@@ -612,12 +652,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const commissionRadio = document.querySelector(`input[name="commission_type"][value="${commissionTypeValue}"]`);
     if (commissionRadio) {
         commissionRadio.checked = true;
+        
+        // Устанавливаем значения полей комиссии ПЕРЕД вызовом toggleCommissionFields
+        {% if form.instance.commission_amount %}
+        const commissionAmountField = document.querySelector('input[name="commission_amount"]');
+        if (commissionAmountField) {
+            commissionAmountField.value = '{{ form.instance.commission_amount }}';
+        }
+        {% endif %}
+        {% if form.instance.commission_bonus %}
+        const commissionBonusField = document.querySelector('input[name="commission_bonus"]');
+        if (commissionBonusField) {
+            commissionBonusField.value = '{{ form.instance.commission_bonus }}';
+        }
+        {% endif %}
+        
+        // Вызываем функцию для корректного отображения полей ПОСЛЕ установки значений
+        toggleCommissionFields();
     }
     {% endif %}
     
     // Обработка поля цены
     const priceInput = document.querySelector('input[name="price"]');
     if (priceInput) {
+        // При редактировании устанавливаем цену из инстанса
+        {% if form.instance.pk and form.instance.price %}
+        priceInput.value = '{{ form.instance.price }}';
+        {% endif %}
+        
         // Форматируем существующее значение при загрузке
         if (priceInput.value) {
             formatPrice(priceInput);
@@ -652,12 +714,29 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обработка выбора файлов
     photoInput.addEventListener('change', function(e) {
         const files = Array.from(e.target.files);
+        const maxFileSize = 10 * 1024 * 1024; // 10MB
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         
         files.forEach(file => {
-            if (file.type.startsWith('image/')) {
-                photoFiles.push(file);
-                displayPhoto(file, photoCounter++);
+            // Проверка размера файла
+            if (file.size > maxFileSize) {
+                alert(`Файл "${file.name}" слишком большой (${(file.size / 1024 / 1024).toFixed(1)}MB). Максимальный размер: 10MB`);
+                return;
             }
+            
+            // Проверка типа файла
+            if (!file.type.startsWith('image/')) {
+                alert(`Файл "${file.name}" не является изображением`);
+                return;
+            }
+            
+            if (!allowedTypes.includes(file.type)) {
+                alert(`Файл "${file.name}" имеет неподдерживаемый формат. Разрешены: JPEG, PNG, GIF, WebP`);
+                return;
+            }
+            
+            photoFiles.push(file);
+            displayPhoto(file, photoCounter++);
         });
         
         updatePhotosData();
@@ -866,10 +945,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'floor',
             'total_floors',
             'area',
-            'microdistrict',
-            'street',
-            'building_no',
-            'description'
+            'microdistrict'
         ];
         
         let allValid = true;

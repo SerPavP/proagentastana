@@ -115,7 +115,7 @@ class ResidentialComplex(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.microdistrict.name})"
+        return self.name
 
 
 class User(AbstractUser):
@@ -247,12 +247,7 @@ class Landmark(models.Model):
 
 class Announcement(models.Model):
     """Property listing model"""
-    REPAIR_STATUS_CHOICES = [
-        ('Черновая отделка', 'Черновая отделка'),
-        ('Новый ремонт', 'Новый ремонт'),
-        ('Не новый, но аккуратный ремонт', 'Не новый, но аккуратный ремонт'),
-        ('Старый ремонт', 'Старый ремонт'),
-    ]
+    # REPAIR_STATUS_CHOICES удалены - теперь используется таблица RepairType
 
     COMMISSION_TYPE_CHOICES = [
         ('seller', 'Я беру с продавца, вы берете с покупателя'),
@@ -260,31 +255,7 @@ class Announcement(models.Model):
         ('buyer', 'Я беру с продавца, вы - с покупателя и я дополнительно доплачиваю вам (ввод числа) тенге'),
     ]
 
-    LANDMARK_CHOICES = [
-        ('', 'Не выбрано'),
-        ('central_mosque', 'Центральная (Новая) Мечеть'),
-        ('expo_mega', 'ЭКСПО и ТРЦ "MEGA Silkway"'),
-        ('nazarbayev_university', 'Назарбаев Университет'),
-        ('ellington_mall', 'ТРК "Эллингтон Молл"'),
-        ('barys_astana_arena', 'Барыс Арена и Астана Арена'),
-        ('botanical_garden', 'Ботанический сад'),
-        ('sphere_park', 'Сфера Парк'),
-        ('presidential_park_left', 'Президентский парк (Левый берег)'),
-        ('presidential_park_right', 'Президентский парк (Правый берег)'),
-        ('khan_shatyr', 'Хан Шатыр'),
-        ('abu_dhabi_baiterek', 'Абу Даби Плаза и Байтерек'),
-        ('central_park', 'Центральный парк'),
-        ('pyramid', 'Пирамида'),
-        ('new_station', 'Новый вокзал'),
-        ('triathlon_park', 'Триатлон Парк'),
-        ('meeting_center', 'ТЦ "Встреча"'),
-        ('eurasia_mall', 'ТРЦ "Евразия"'),
-        ('akimat_museum', 'Здание акимата (Музей первого Президента)'),
-        ('koktal_park', 'Парк "Коктал"'),
-        ('artem_market', 'Рынок Артём'),
-        ('old_station', 'Старый вокзал'),
-        ('central_embankment', 'Центральная набережная'),
-    ]
+    # LANDMARK_CHOICES удалены - теперь используется таблица Landmark
 
     user = models.ForeignKey(
         User, 
@@ -302,7 +273,6 @@ class Announcement(models.Model):
     price = models.BigIntegerField(verbose_name="Price")
     repair_status = models.CharField(
         max_length=35, 
-        choices=REPAIR_STATUS_CHOICES, 
         verbose_name="Repair Status"
     )
     building_type = models.CharField(max_length=100, blank=True, null=True, verbose_name="Building Type")
