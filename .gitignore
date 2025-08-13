@@ -3,7 +3,8 @@
 .env.local
 .env.production
 .env.neon
-
+.env.prod
+.env.test
 # Database
 *.sqlite3
 *.db
