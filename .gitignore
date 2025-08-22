@@ -5,6 +5,7 @@
 .env.neon
 .env.prod
 .env.test
+
 # Database
 *.sqlite3
 *.db
@@ -12,6 +13,10 @@
 # Media files
 /media/
 /mediafiles/
+
+# Specific media directories
+/media/announcement_photos/
+/media/user_photos/
 
 # Static files (collected)
 /staticfiles/

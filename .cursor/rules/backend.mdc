@@ -1,0 +1,300 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Backend Rules - ProAgentAstana
+
+## Django Backend Development Guidelines
+
+### Project Structure
+- `proagentastana/` - Django project settings
+- `main/` - Main Django application
+- `manage.py` - Django management script
+- `requirements.txt` - Python dependencies
+
+### Core Backend Files
+
+#### 1. Models (`main/models.py`)
+```python
+# Always follow these patterns:
+class ModelName(models.Model):
+    field_name = models.CharField(max_length=100, verbose_name="Human Readable Name")
+    
+    class Meta:
+        verbose_name = "Model Name"
+        verbose_name_plural = "Model Names"
+    
+    def __str__(self):
+        return self.field_name
+```
+
+**Rules:**
+- Use descriptive field names
+- Add `verbose_name` for all fields
+- Use `help_text` for complex fields
+- Always implement `__str__` method
+- Use proper field types (CharField, IntegerField, etc.)
+- Add `Meta` class with verbose names
+
+#### 2. Views (`main/views.py`)
+```python
+# Use Class-Based Views when possible
+from django.views.generic import ListView, DetailView, CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class PropertyListView(ListView):
+    model = Announcement
+    template_name = 'main/property_list.html'
+    context_object_name = 'properties'
+    
+    def get_queryset(self):
+        return Announcement.objects.filter(is_active=True)
+```
+
+**Rules:**
+- Prefer Class-Based Views over function-based views
+- Use `LoginRequiredMixin` for protected views
+- Override `get_queryset()` for filtering
+- Use `context_object_name` for clarity
+- Handle exceptions properly
+
+#### 3. Forms (`main/forms.py`)
+```python
+from django import forms
+from .models import Announcement
+
+class AnnouncementForm(forms.ModelForm):
+    class Meta:
+        model = Announcement
+        fields = ['title', 'description', 'price']
+        
+    def clean_price(self):
+        price = self.cleaned_data.get('price')
+        if price <= 0:
+            raise forms.ValidationError("Price must be positive")
+        return price
+```
+
+**Rules:**
+- Create separate forms for different operations
+- Use `clean()` methods for complex validation
+- Add custom validators where needed
+- Use `ModelForm` for model-based forms
+
+#### 4. Services (`main/services.py`)
+```python
+from typing import List, Optional
+from .models import Announcement
+
+class PropertyService:
+    @staticmethod
+    def get_active_properties() -> List[Announcement]:
+        """Get all active property announcements"""
+        return Announcement.objects.filter(is_active=True)
+    
+    @staticmethod
+    def create_property(data: dict, user) -> Announcement:
+        """Create new property announcement"""
+        try:
+            return Announcement.objects.create(**data, user=user)
+        except Exception as e:
+            raise ValueError(f"Failed to create property: {str(e)}")
+```
+
+**Rules:**
+- Extract business logic to services
+- Use type hints for parameters and return values
+- Handle exceptions in services
+- Make services reusable
+- Add docstrings for all methods
+
+#### 5. URLs (`main/urls.py`)
+```python
+from django.urls import path
+from . import views
+
+app_name = 'main'
+
+urlpatterns = [
+    path('properties/', views.PropertyListView.as_view(), name='property_list'),
+    path('property/<int:pk>/', views.PropertyDetailView.as_view(), name='property_detail'),
+]
+```
+
+**Rules:**
+- Use descriptive URL names
+- Use `path()` instead of `url()` (Django 2.0+)
+- Group related URLs together
+- Use `app_name` for namespace
+
+### Authentication & Security
+
+#### Custom Authentication (`main/auth_backends.py`)
+```python
+from django.contrib.auth.backends import BaseBackend
+from .models import User
+
+class PhoneBackend(BaseBackend):
+    def authenticate(self, request, phone=None, password=None):
+        try:
+            user = User.objects.get(phone=phone)
+            if user.check_password(password):
+                return user
+        except User.DoesNotExist:
+            return None
+```
+
+**Rules:**
+- Use phone-based authentication
+- Implement proper password validation
+- Handle authentication errors gracefully
+- Use sessions for user tracking
+
+### Database Operations
+
+#### Query Optimization
+```python
+# Good - Use select_related for ForeignKey
+properties = Announcement.objects.select_related('user', 'agency').all()
+
+# Good - Use prefetch_related for ManyToMany
+collections = Collection.objects.prefetch_related('properties').all()
+
+# Avoid N+1 queries
+for property in properties:
+    print(property.user.name)  # This will cause N+1 queries
+```
+
+**Rules:**
+- Use `select_related()` for ForeignKey relationships
+- Use `prefetch_related()` for ManyToMany relationships
+- Avoid N+1 query problems
+- Use `only()` and `defer()` for large models
+
+### Error Handling
+
+#### Exception Handling
+```python
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+
+def api_view(request):
+    try:
+        # Your logic here
+        result = some_operation()
+        return JsonResponse({'success': True, 'data': result})
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'errors': e.messages}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+```
+
+**Rules:**
+- Always handle exceptions
+- Return meaningful error messages
+- Use appropriate HTTP status codes
+- Log errors for debugging
+
+### Testing
+
+#### Test Structure
+```python
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from .models import Announcement
+
+class AnnouncementModelTest(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            phone='+77771234567',
+            password='testpass123'
+        )
+    
+    def test_announcement_creation(self):
+        announcement = Announcement.objects.create(
+            title="Test Property",
+            user=self.user
+        )
+        self.assertEqual(announcement.title, "Test Property")
+```
+
+**Rules:**
+- Write tests for models, views, and forms
+- Use `setUp()` for test data
+- Test both success and failure cases
+- Use descriptive test method names
+
+### Performance Guidelines
+
+#### Caching
+```python
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+
+@cache_page(60 * 15)  # Cache for 15 minutes
+def expensive_view(request):
+    # Expensive operation
+    pass
+
+# Manual caching
+def get_property_data(property_id):
+    cache_key = f"property_{property_id}"
+    data = cache.get(cache_key)
+    if data is None:
+        data = expensive_operation()
+        cache.set(cache_key, data, 300)  # Cache for 5 minutes
+    return data
+```
+
+**Rules:**
+- Use caching for expensive operations
+- Set appropriate cache timeouts
+- Use cache keys that are unique and descriptive
+- Clear cache when data changes
+
+### Code Style
+
+#### Python/Django Conventions
+- Use snake_case for variables and functions
+- Use PascalCase for classes
+- Use UPPER_CASE for constants
+- Follow PEP 8 style guide
+- Use meaningful variable names
+- Add docstrings for all functions and classes
+
+#### Import Organization
+```python
+# Standard library imports
+import os
+import sys
+from typing import List, Optional
+
+# Third-party imports
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+# Local application imports
+from .models import Announcement
+from .services import PropertyService
+```
+
+### Environment Configuration
+
+#### Settings Management
+```python
+# settings.py
+import os
+from decouple import config
+
+DEBUG = config('DEBUG', default=False, cast=bool)
+SECRET_KEY = config('SECRET_KEY')
+DATABASE_URL = config('DATABASE_URL')
+```
+
+**Rules:**
+- Use environment variables for sensitive data
+- Use `python-decouple` for configuration
+- Never commit secrets to version control
+- Use different settings for development and production
+

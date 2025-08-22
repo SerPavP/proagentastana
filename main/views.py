@@ -542,6 +542,10 @@ class AnnouncementDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('announcement_list')
 
     def get_queryset(self):
+        # Если пользователь является администратором, он может удалять любые объявления
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Announcement.objects.all()
+        # Обычные пользователи могут удалять только свои объявления
         return Announcement.objects.filter(user=self.request.user)
 
     def delete(self, request, *args, **kwargs):
@@ -828,6 +832,7 @@ def create_collection_ajax(request):
     """AJAX view to create new collection"""
     if request.method == 'POST':
         collection_name = request.POST.get('collection_name', '').strip()
+        announcement_id = request.POST.get('announcement_id')
         
         if not collection_name:
             return JsonResponse({'success': False, 'message': 'Название коллекции не может быть пустым'})
@@ -845,6 +850,23 @@ def create_collection_ajax(request):
                 user=request.user,
                 name=collection_name
             )
+            
+            # Если передан ID объявления, добавляем его в коллекцию
+            if announcement_id:
+                try:
+                    announcement = Announcement.objects.get(pk=announcement_id)
+                    CollectionService.add_announcement_to_collection(collection, announcement)
+                    
+                    # Log adding to collection
+                    log_collection_action(
+                        request.user, 
+                        'add_to_collection', 
+                        collection, 
+                        request, 
+                        announcement
+                    )
+                except Announcement.DoesNotExist:
+                    pass  # Игнорируем, если объявление не найдено
             
             # Log collection creation
             log_collection_action(

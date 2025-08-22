@@ -50,6 +50,41 @@
     margin: 0 5px;
 }
 
+.commission-field-wrapper {
+    display: inline-block;
+    margin: 0 8px;
+    padding: 4px 8px;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.commission-field-wrapper input {
+    width: 200px !important;
+    height: 45px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    border: 2px solid #007bff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+}
+
+.commission-field-wrapper input:disabled {
+    background-color: #e9ecef !important;
+    border-color: #ced4da !important;
+    color: #6c757d !important;
+    box-shadow: none !important;
+    opacity: 0.6;
+}
+
+.commission-field-wrapper.disabled {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    opacity: 0.6;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     border: none;
@@ -265,18 +300,19 @@
                         <!-- Основная информация -->
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Количество комнат</label>
+                                <label class="form-label">Количество комнат <span class="text-danger">*</span></label>
                             {{ form.rooms_count }}
                             {% if form.rooms_count.errors %}
                                     <div class="text-danger small">{{ form.rooms_count.errors.0 }}</div>
                             {% endif %}
                         </div>
                             <div class="col-md-6">
-                                <label class="form-label">Цена <span class="text-muted">тенге</span></label>
+                                <label class="form-label">Цена <span class="text-danger">*</span> <span class="text-muted">тенге</span></label>
                                 <div class="input-group">
                             {{ form.price }}
                                     <span class="input-group-text">₸</span>
                                 </div>
+                                <small class="text-muted">Максимум: 999,999,999,999,999 тенге (15 цифр)</small>
                                 {% if form.price.errors %}
                                     <div class="text-danger small">{{ form.price.errors.0 }}</div>
                             {% endif %}
@@ -285,14 +321,14 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Ремонт</label>
+                                <label class="form-label">Ремонт <span class="text-danger">*</span></label>
                             {{ form.repair_status }}
                             {% if form.repair_status.errors %}
                                     <div class="text-danger small">{{ form.repair_status.errors.0 }}</div>
                             {% endif %}
                         </div>
                             <div class="col-md-6">
-                                <label class="form-label">Тип дома</label>
+                                <label class="form-label">Тип дома <span class="text-danger">*</span></label>
                             {{ form.building_type }}
                             {% if form.building_type.errors %}
                                     <div class="text-danger small">{{ form.building_type.errors.0 }}</div>
@@ -302,7 +338,7 @@
 
                         <div class="row mb-3">
                             <div class="col-md-8">
-                                <label class="form-label">Год постройки <span class="text-muted">(сдачи в эксплуатацию)</span></label>
+                                <label class="form-label">Год постройки <span class="text-danger">*</span> <span class="text-muted">(сдачи в эксплуатацию)</span></label>
                             {{ form.year_built }}
                             {% if form.year_built.errors %}
                                     <div class="text-danger small">{{ form.year_built.errors.0 }}</div>
@@ -321,7 +357,7 @@
 
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Этаж</label>
+                                <label class="form-label">Этаж <span class="text-danger">*</span></label>
                             {{ form.floor }}
                             {% if form.floor.errors %}
                                     <div class="text-danger small">{{ form.floor.errors.0 }}</div>
@@ -331,7 +367,7 @@
                                 <span class="fw-bold">из</span>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Всего этажей</label>
+                                <label class="form-label">Всего этажей <span class="text-danger">*</span></label>
                             {{ form.total_floors }}
                             {% if form.total_floors.errors %}
                                     <div class="text-danger small">{{ form.total_floors.errors.0 }}</div>
@@ -341,7 +377,7 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Площадь <span class="text-muted">м²</span></label>
+                                <label class="form-label">Площадь <span class="text-danger">*</span> <span class="text-muted">м²</span></label>
                                 {{ form.area }}
                                 {% if form.area.errors %}
                                     <div class="text-danger small">{{ form.area.errors.0 }}</div>
@@ -352,7 +388,7 @@
 
                         <div class="row mb-3">
                             <div class="col-12">
-                                <label class="form-label">Микрорайон</label>
+                                <label class="form-label">Микрорайон <span class="text-danger">*</span></label>
                             {{ form.microdistrict }}
                             {% if form.microdistrict.errors %}
                                     <div class="text-danger small">{{ form.microdistrict.errors.0 }}</div>
@@ -454,16 +490,7 @@
                             <input type="hidden" name="photos_data" id="photosData">
                         </div>
 
-                        <!-- Описание -->
-                        <div class="mb-4">
-                            <label class="form-label">Добавить описание</label>
-                            {{ form.description }}
-                            {% if form.description.errors %}
-                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Опорные точки -->
+                        <!-- Дом находится рядом с -->
                         <div class="mb-4">
                             <label class="form-label">{{ form.landmarks.label }}</label>
                             <div class="landmarks-tags">
@@ -482,6 +509,15 @@
                             {% endif %}
                         </div>
 
+                        <!-- Описание -->
+                        <div class="mb-4">
+                            <label class="form-label">Добавить описание</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
                         <!-- Комиссия -->
                         <div class="mb-4">
                             <h6 class="mt-4 mb-3">Как я делюсь комиссией <span class="text-muted">(нужно выбрать один из 3 вариантов)</span></h6>
@@ -497,18 +533,26 @@
                                 <div class="form-check mb-3">
                                     <input class="form-check-input" type="radio" name="commission_type" id="commission2" value="split">
                                     <label class="form-check-label" for="commission2">
-                                        <span style="color: #e91e63;">Я беру с продавца и</span>
-                                        {{ form.commission_amount }}
-                                        <span style="color: #e91e63;">тенге с покупателя. Остальное ваше</span>
+                                        <span style="color: #e91e63;">Я беру с продавца и </span>
+                                        <span class="commission-field-wrapper disabled" id="commission-amount-wrapper">
+                                            <input type="number" name="commission_amount" class="form-control" min="0" 
+                                                   style="width: 200px; height: 45px; display: inline-block; font-size: 16px; font-weight: 500; text-align: center;" 
+                                                   id="id_commission_amount" disabled>
+                                        </span>
+                                        <span style="color: #e91e63;"> тенге с покупателя. Остальное ваше</span>
                                     </label>
                                 </div>
                                 
                                 <div class="form-check mb-3">
                                     <input class="form-check-input" type="radio" name="commission_type" id="commission3" value="buyer">
                                     <label class="form-check-label" for="commission3">
-                                        <span style="color: #e91e63;">Я беру с продавца, вы - с покупателя и я дополнительно доплачиваю вам</span>
-                                        {{ form.commission_bonus }}
-                                        <span style="color: #e91e63;">тенге</span>
+                                        <span style="color: #e91e63;">Я беру с продавца, вы - с покупателя и я дополнительно доплачиваю вам </span>
+                                        <span class="commission-field-wrapper disabled" id="commission-bonus-wrapper">
+                                            <input type="number" name="commission_bonus" class="form-control" min="0" 
+                                                   style="width: 200px; height: 45px; display: inline-block; font-size: 16px; font-weight: 500; text-align: center;" 
+                                                   id="id_commission_bonus" disabled>
+                                        </span>
+                                        <span style="color: #e91e63;"> тенге</span>
                                     </label>
                                 </div>
                             </div>
@@ -604,32 +648,32 @@ function validateForm() {
 }
 
     // Управление комиссией
-    function setupCommissionHandling() {
-        const commissionRadios = document.querySelectorAll('input[name="commission_type"]');
+    // Глобальная функция для показа/скрытия полей комиссии
+    function toggleCommissionFields() {
+        const selectedType = document.querySelector('input[name="commission_type"]:checked')?.value;
+        const isEditing = document.querySelector('form').hasAttribute('data-editing');
         const commissionAmount = document.querySelector('input[name="commission_amount"]');
         const commissionBonus = document.querySelector('input[name="commission_bonus"]');
         
-        // Функция для показа/скрытия полей
-        function toggleCommissionFields() {
-            const selectedType = document.querySelector('input[name="commission_type"]:checked')?.value;
-            const isEditing = document.querySelector('form').hasAttribute('data-editing');
-            
-            if (commissionAmount) {
-                commissionAmount.style.display = selectedType === 'split' ? 'inline-block' : 'none';
-                // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
-                if (selectedType !== 'split' && !isEditing) {
-                    commissionAmount.value = '';
-                }
-            }
-            
-            if (commissionBonus) {
-                commissionBonus.style.display = selectedType === 'buyer' ? 'inline-block' : 'none';
-                // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
-                if (selectedType !== 'buyer' && !isEditing) {
-                    commissionBonus.value = '';
-                }
+        if (commissionAmount) {
+            commissionAmount.style.display = selectedType === 'split' ? 'inline-block' : 'none';
+            // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
+            if (selectedType !== 'split' && !isEditing) {
+                commissionAmount.value = '';
             }
         }
+        
+        if (commissionBonus) {
+            commissionBonus.style.display = selectedType === 'buyer' ? 'inline-block' : 'none';
+            // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
+            if (selectedType !== 'buyer' && !isEditing) {
+                commissionBonus.value = '';
+            }
+        }
+    }
+    
+    function setupCommissionHandling() {
+        const commissionRadios = document.querySelectorAll('input[name="commission_type"]');
         
         // Обработчики событий для радиокнопок
         commissionRadios.forEach(radio => {
@@ -909,8 +953,77 @@ function validateForm() {
             const photoModal = new bootstrap.Modal(document.getElementById('photoModal'));
             photoModal.show();
         }
+            });
+        
+        // Улучшенная обработка поля цены
+        const priceField = document.getElementById('id_price');
+        if (priceField) {
+            // Разрешаем только цифры и предотвращаем переполнение
+            priceField.addEventListener('input', function(e) {
+                let value = this.value.replace(/[^0-9]/g, ''); // Только цифры
+                
+                // Ограничиваем до 10 цифр (9,999,999,999)
+                if (value.length > 10) {
+                    value = value.slice(0, 10);
+                }
+                
+                // Проверяем, что значение не превышает максимум
+                const numValue = parseInt(value);
+                if (numValue > 9999999999) {
+                    value = '9999999999';
+                }
+                
+                this.value = value;
+            });
+            
+            // Предотвращаем ввод недопустимых символов
+            priceField.addEventListener('keypress', function(e) {
+                // Разрешаем только цифры, backspace, delete, tab, escape, enter
+                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                    // Разрешаем Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    (e.keyCode === 65 && e.ctrlKey) ||
+                    (e.keyCode === 67 && e.ctrlKey) ||
+                    (e.keyCode === 86 && e.ctrlKey) ||
+                    (e.keyCode === 88 && e.ctrlKey)) {
+                    return;
+                }
+                // Убеждаемся, что это цифра
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // Управление состоянием полей комиссии
+        const commissionRadios = document.querySelectorAll('input[name="commission_type"]');
+        const commissionAmountWrapper = document.getElementById('commission-amount-wrapper');
+        const commissionBonusWrapper = document.getElementById('commission-bonus-wrapper');
+        const commissionAmountInput = document.getElementById('id_commission_amount');
+        const commissionBonusInput = document.getElementById('id_commission_bonus');
+        
+        commissionRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Сброс всех полей
+                commissionAmountInput.disabled = true;
+                commissionBonusInput.disabled = true;
+                commissionAmountWrapper.classList.add('disabled');
+                commissionBonusWrapper.classList.add('disabled');
+                commissionAmountInput.value = '';
+                commissionBonusInput.value = '';
+                
+                // Активация нужного поля
+                if (this.value === 'split') {
+                    commissionAmountInput.disabled = false;
+                    commissionAmountWrapper.classList.remove('disabled');
+                    commissionAmountInput.focus();
+                } else if (this.value === 'buyer') {
+                    commissionBonusInput.disabled = false;
+                    commissionBonusWrapper.classList.remove('disabled');
+                    commissionBonusInput.focus();
+                }
+            });
+        });
     });
-});
 </script>
 
 <!-- Модальное окно для просмотра фото -->
@@ -1031,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Считаем заполненные обязательные поля
         const requiredFields = [
             'rooms_count', 'price', 'repair_status', 'building_type', 'year_built', 
-            'floor', 'total_floors', 'area', 'microdistrict', 'street', 'building_no', 'description'
+            'floor', 'total_floors', 'area', 'microdistrict'
         ];
         
         let filledFields = 0;

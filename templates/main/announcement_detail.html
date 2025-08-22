@@ -45,8 +45,6 @@
     align-items: center;
 }
 
-
-
 /* Grid для 5 фотографий в ряду */
 .photos-grid {
     display: grid;
@@ -96,10 +94,85 @@
 .navbar {
     z-index: 1030;
 }
+
+/* Стили для кнопки добавления в коллекцию */
+.add-to-collection-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.add-to-collection-btn:hover {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+
+.collection-dropdown {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.collection-item {
+    transition: all 0.2s ease;
+}
+
+.collection-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.collection-item.active {
+    background-color: #e3f2fd;
+    border-left: 3px solid #2196f3;
+}
+
+.collection-item {
+    color: #333 !important;
+    text-decoration: none;
+}
+
+.collection-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+    color: #333 !important;
+}
+
+.collection-item.active {
+    background-color: #e3f2fd;
+    border-left: 3px solid #2196f3;
+    color: #333 !important;
+}
+
+.collection-item i {
+    color: #6c757d;
+    margin-right: 8px;
+}
+
+.collection-item.active i {
+    color: #2196f3 !important;
+}
+
+.collection-item .badge {
+    color: white !important;
+}
+
+.collection-name {
+    color: #333 !important;
+    font-weight: 500;
+}
+
+.collection-item.active .collection-name {
+    color: #2196f3 !important;
+    font-weight: 600;
+}
 </style>
 {% endblock %}
 
 {% block content %}
+
 <div class="row">
     <!-- Property Specifications Column -->
     <div class="col-lg-2">
@@ -267,59 +340,48 @@
                             <form method="post" action="{% url 'archive_announcement' announcement.pk %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-warning">
-                                    <i class="bi bi-archive-fill"></i> Добавить в архив
+                                    <i class="bi bi-archive"></i> Архивировать
                                 </button>
                             </form>
                         {% endif %}
-                    {% elif user.is_authenticated %}
+                    {% elif user.is_staff or user.is_superuser %}
+                        <!-- Admin buttons -->
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    {% endif %}
+                    
+                    {% if user.is_authenticated %}
+                        <!-- Add to Collection button -->
                         <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> Мой аккаунт
+                            <button class="btn btn-outline-primary dropdown-toggle add-to-collection-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bookmark-plus"></i> Добавить в коллекцию
                             </button>
-                            <ul class="dropdown-menu" id="collectionsDropdown" style="min-width: 250px;">
-                                <div id="existingCollections">
+                            <ul class="dropdown-menu collection-dropdown">
+                                {% if user_collections %}
                                     {% for collection in user_collections %}
                                         <li>
-                                            <a class="dropdown-item add-to-collection" href="#" 
-                                               data-announcement-id="{{ announcement.pk }}" 
-                                               data-collection-id="{{ collection.pk }}">
-                                                <i class="bi bi-bookmark-fill text-primary"></i> {{ collection.name }}
+                                            <a class="dropdown-item collection-item {% if collection in announcement_collections %}active{% endif %}" 
+                                               href="#" 
+                                               data-collection-id="{{ collection.id }}"
+                                               data-announcement-id="{{ announcement.id }}">
+                                                <i class="bi bi-bookmark{% if collection in announcement_collections %}-fill text-primary{% endif %}"></i>
+                                                <span class="collection-name">{{ collection.name }}</span>
+                                                {% if collection in announcement_collections %}
+                                                    <span class="badge bg-primary ms-2">✓</span>
+                                                {% endif %}
                                             </a>
                                         </li>
-                                    {% empty %}
-                                        <li><span class="dropdown-item-text text-muted">Нет коллекций</span></li>
                                     {% endfor %}
-                                </div>
-                                <li><hr class="dropdown-divider"></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
                                 <li>
-                                    <div class="px-3 py-2">
-                                        <div class="mb-2">
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="newCollectionName" 
-                                                   placeholder="Название новой коллекции"
-                                                   maxlength="255">
-                                        </div>
-                                        <button class="btn btn-primary btn-sm w-100" 
-                                                id="createCollectionBtn" 
-                                                data-announcement-id="{{ announcement.pk }}">
-                                            <i class="bi bi-plus-circle"></i> Создать коллекцию
-                                        </button>
-                                    </div>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#createCollectionModal">
+                                        <i class="bi bi-plus-circle"></i> Создать новую коллекцию
+                                    </a>
                                 </li>
                             </ul>
                         </div>
-                        
-                        <!-- Показываем информацию о коллекциях, если объявление уже добавлено -->
-                        {% if announcement_collections %}
-                            <div class="mt-2">
-                                <small class="text-success">
-                                    <i class="bi bi-bookmark-fill"></i> Уже в коллекциях: 
-                                    {% for collection in announcement_collections %}
-                                        <span class="badge bg-success">{{ collection.name }}</span>{% if not forloop.last %}, {% endif %}
-                                    {% endfor %}
-                                </small>
-                            </div>
-                        {% endif %}
                     {% endif %}
                     
                     <a href="{% url 'announcement_list' %}" class="btn btn-outline-secondary">
@@ -357,33 +419,22 @@
 
                 <!-- Landmarks Info -->
                 {% if announcement.landmarks.all %}
-                    <div class="mb-3 p-2 bg-light rounded">
-                        <h6 class="mb-2"><i class="bi bi-geo text-primary"></i> Дом находится рядом с</h6>
-                        <div class="d-flex flex-wrap gap-1 justify-content-center">
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="bi bi-geo-alt"></i> Рядом</h6>
+                        <div class="row text-start">
                             {% for landmark in announcement.landmarks.all %}
-                                <span class="badge bg-success" style="font-size: 10px;">{{ landmark.name }}</span>
+                                <div class="col-6 mb-1">
+                                    <small class="text-muted">
+                                        <i class="bi bi-dot"></i> {{ landmark.name }}
+                                        {% if landmark.distance %}
+                                            <br><span class="text-primary">{{ landmark.distance }} м</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
                             {% endfor %}
                         </div>
                     </div>
                 {% endif %}
-
-                <div class="d-grid gap-2">
-                    <a href="tel:{{ announcement.user.phone }}" class="btn btn-primary">
-                        <i class="bi bi-phone"></i> {{ announcement.user.phone }}
-                    </a>
-                    
-                    {% if announcement.user.whatsapp_phone %}
-                        <a href="https://wa.me/{{ announcement.user.whatsapp_phone|cut:'+' }}" class="btn btn-success" target="_blank">
-                            <i class="bi bi-whatsapp"></i> WhatsApp
-                        </a>
-                    {% endif %}
-                    
-                    {% if announcement.user.email %}
-                        <a href="mailto:{{ announcement.user.email }}" class="btn btn-outline-primary">
-                            <i class="bi bi-envelope"></i> Email
-                        </a>
-                    {% endif %}
-                </div>
 
                 <!-- Commission Info -->
                 {% if announcement.commission_type %}
@@ -406,6 +457,17 @@
                 <small class="text-muted">
                     <i class="bi bi-calendar"></i> Опубликовано {{ announcement.created_at|date:"d.m.Y" }}
                 </small>
+                
+                <!-- Collections Info -->
+                {% if announcement_collections %}
+                    <br>
+                    <small class="text-success">
+                        <i class="bi bi-bookmark-fill"></i> В коллекциях: 
+                        {% for collection in announcement_collections %}
+                            <span class="badge bg-success">{{ collection.name }}</span>
+                        {% endfor %}
+                    </small>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -420,6 +482,62 @@
             </div>
             <div class="modal-body text-center p-0">
                 <img id="modalPhoto" src="" alt="Увеличенное фото" class="img-fluid" style="max-height: 80vh; max-width: 100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Подтверждение удаления
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы действительно хотите удалить это объявление?</p>
+                <p class="text-muted small">Это действие нельзя отменить.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form method="post" action="{% url 'announcement_delete' announcement.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для создания коллекции -->
+<div class="modal fade" id="createCollectionModal" tabindex="-1" aria-labelledby="createCollectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCollectionModalLabel">
+                    <i class="bi bi-plus-circle text-primary"></i> Создать новую коллекцию
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCollectionForm">
+                    <div class="mb-3">
+                        <label for="collectionName" class="form-label">Название коллекции</label>
+                        <input type="text" class="form-control" id="collectionName" name="name" required maxlength="255" placeholder="Введите название коллекции">
+                        <div class="form-text">Максимум 255 символов</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="createCollectionBtn">
+                    <i class="bi bi-plus-circle"></i> Создать коллекцию
+                </button>
             </div>
         </div>
     </div>
@@ -463,176 +581,141 @@ $.ajaxSetup({
 });
 
 $(document).ready(function() {
-    // Update collections info on page load
-    updateCollectionsInfo();
-    
-    // Handle add to collection
-    $(document).on('click', '.add-to-collection', function(e) {
+    // Обработка добавления/удаления из коллекций
+    $('.collection-item').on('click', function(e) {
         e.preventDefault();
         
-        var announcementId = $(this).data('announcement-id');
-        var collectionId = $(this).data('collection-id');
+        const collectionId = $(this).data('collection-id');
+        const announcementId = $(this).data('announcement-id');
+        const item = $(this);
+        
+        // Определяем действие (добавить или удалить)
+        const isInCollection = item.hasClass('active');
+        const action = isInCollection ? 'remove' : 'add';
         
         $.ajax({
-            url: '{% url "add_to_collection" %}',
+            url: action === 'add' ? '/ajax/add-to-collection/' : '/ajax/remove-from-collection/',
             method: 'POST',
             data: {
-                'announcement_id': announcementId,
-                'collection_id': collectionId,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                collection_id: collectionId,
+                announcement_id: announcementId
             },
-            success: function(data) {
-                if (data.success) {
-                    // Show success message
-                    showMessage(data.message, 'success');
-                    // Close dropdown
-                    var dropdown = bootstrap.Dropdown.getInstance($('.dropdown-toggle')[0]);
-                    if (dropdown) dropdown.hide();
+            success: function(response) {
+                if (response.success) {
+                    if (action === 'add') {
+                        item.addClass('active');
+                        item.find('i').removeClass('bi-bookmark').addClass('bi-bookmark-fill text-primary');
+                        item.append('<span class="badge bg-primary ms-2">✓</span>');
+                    } else {
+                        item.removeClass('active');
+                        item.find('i').removeClass('bi-bookmark-fill text-primary').addClass('bi-bookmark');
+                        item.find('.badge').remove();
+                    }
                     
-                    // Update collections info
-                    updateCollectionsInfo();
+                    // Показываем уведомление
+                    showNotification(response.message, 'success');
                 } else {
-                    // Show error message
-                    showMessage(data.message, 'warning');
+                    showNotification(response.message || 'Произошла ошибка', 'error');
                 }
             },
             error: function() {
-                showMessage('Произошла ошибка при добавлении в коллекцию', 'danger');
+                showNotification('Произошла ошибка при выполнении операции', 'error');
             }
         });
     });
     
-    // Handle create new collection
-    $('#createCollectionBtn').click(function(e) {
-        e.preventDefault();
-        
-        var collectionName = $('#newCollectionName').val().trim();
-        var announcementId = $(this).data('announcement-id');
+    // Обработка создания новой коллекции
+    $('#createCollectionBtn').on('click', function() {
+        const collectionName = $('#collectionName').val().trim();
+        const announcementId = {{ announcement.id }};
         
         if (!collectionName) {
-            showMessage('Введите название коллекции', 'warning');
+            showNotification('Введите название коллекции', 'error');
             return;
         }
         
-        // Disable button during request
+        // Отключаем кнопку во время запроса
         $(this).prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Создание...');
         
         $.ajax({
-            url: '{% url "create_collection_ajax" %}',
+            url: '/ajax/create-collection/',
             method: 'POST',
             data: {
-                'collection_name': collectionName,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                collection_name: collectionName,
+                announcement_id: announcementId
             },
-            success: function(data) {
-                if (data.success) {
-                    // Add new collection to dropdown
-                    var newCollectionItem = 
-                        '<li>' +
-                            '<a class="dropdown-item add-to-collection" href="#" ' +
-                               'data-announcement-id="' + announcementId + '" ' +
-                               'data-collection-id="' + data.collection.id + '">' +
-                                '<i class="bi bi-bookmark-fill text-primary"></i> ' + data.collection.name +
-                            '</a>' +
-                        '</li>';
+            success: function(response) {
+                if (response.success) {
+                    // Закрываем модальное окно
+                    $('#createCollectionModal').modal('hide');
                     
-                    // Remove "Нет коллекций" message if it exists
-                    $('#existingCollections .dropdown-item-text').parent().remove();
+                    // Очищаем форму
+                    $('#collectionName').val('');
                     
-                    // Add new collection to the list
-                    $('#existingCollections').append(newCollectionItem);
+                    // Добавляем новую коллекцию в dropdown
+                    const newCollectionItem = `
+                        <li>
+                            <a class="dropdown-item collection-item active" href="#" 
+                               data-collection-id="${response.collection.id}"
+                               data-announcement-id="${announcementId}">
+                                <i class="bi bi-bookmark-fill text-primary"></i>
+                                <span class="collection-name">${response.collection.name}</span>
+                                <span class="badge bg-primary ms-2">✓</span>
+                            </a>
+                        </li>
+                    `;
                     
-                    // Clear input
-                    $('#newCollectionName').val('');
+                    // Добавляем новую коллекцию в начало списка
+                    $('.collection-dropdown').prepend(newCollectionItem);
                     
-                    // Show success message
-                    showMessage('Коллекция "' + data.collection.name + '" создана успешно', 'success');
-                    
-                    // Automatically add announcement to new collection
-                    $.ajax({
-                        url: '{% url "add_to_collection" %}',
-                        method: 'POST',
-                        data: {
-                            'announcement_id': announcementId,
-                            'collection_id': data.collection.id,
-                            'csrfmiddlewaretoken': '{{ csrf_token }}'
-                        },
-                        success: function(addData) {
-                            if (addData.success) {
-                                showMessage('Объявление добавлено в новую коллекцию', 'success');
-                                // Close dropdown
-                                var dropdown = bootstrap.Dropdown.getInstance($('.dropdown-toggle')[0]);
-                                if (dropdown) dropdown.hide();
-                            }
-                        }
-                    });
+                    // Показываем уведомление
+                    showNotification(`Коллекция "${response.collection.name}" создана и объявление добавлено!`, 'success');
                 } else {
-                    showMessage(data.message, 'danger');
+                    showNotification(response.message || 'Произошла ошибка при создании коллекции', 'error');
                 }
             },
             error: function() {
-                showMessage('Произошла ошибка при создании коллекции', 'danger');
+                showNotification('Произошла ошибка при создании коллекции', 'error');
             },
             complete: function() {
-                // Re-enable button
+                // Включаем кнопку обратно
                 $('#createCollectionBtn').prop('disabled', false).html('<i class="bi bi-plus-circle"></i> Создать коллекцию');
             }
         });
     });
     
-    // Handle Enter key in collection name input
-    $('#newCollectionName').keypress(function(e) {
+    // Обработка Enter в поле названия коллекции
+    $('#collectionName').on('keypress', function(e) {
         if (e.which === 13) { // Enter key
             $('#createCollectionBtn').click();
         }
     });
     
-    // Function to show messages
-    function showMessage(message, type) {
-        var alertClass = 'alert-' + type;
-        var alert = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" ' +
-                      'style="top: 20px; right: 20px; z-index: 9999;" role="alert">' +
-                      message +
-                      '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
-                      '</div>');
-        
-        $('body').append(alert);
-        
-        // Auto-hide after 5 seconds
-        setTimeout(function() {
-            alert.alert('close');
-        }, 5000);
-    }
-    
-    // Function to update collections info dynamically
-    function updateCollectionsInfo() {
-        // Update the collection button text to show which collections this announcement is in
-        $.ajax({
-            url: '{% url "get_announcement_collections" announcement.id %}',
-            method: 'GET',
-            success: function(data) {
-                if (data.collections && data.collections.length > 0) {
-                    // Show collection names in the dropdown button
-                    var collectionNames = data.collections.map(c => c.name).join(', ');
-                    if (collectionNames.length > 30) {
-                        collectionNames = collectionNames.substring(0, 30) + '...';
-                    }
-                    $('.dropdown-toggle').html(
-                        '<i class="bi bi-bookmark-check-fill text-success"></i> В коллекциях: ' + collectionNames
-                    );
-                } else {
-                    // Reset to default state
-                    $('.dropdown-toggle').html(
-                        '<i class="bi bi-person-circle"></i> Мой аккаунт'
-                    );
-                }
-            },
-            error: function() {
-                console.log('Не удалось обновить информацию о коллекциях');
-            }
-        });
-    }
+    // Очистка формы при закрытии модального окна
+    $('#createCollectionModal').on('hidden.bs.modal', function() {
+        $('#collectionName').val('');
+        $('#createCollectionBtn').prop('disabled', false).html('<i class="bi bi-plus-circle"></i> Создать коллекцию');
+    });
 });
+
+// Функция для показа уведомлений
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Добавляем уведомление в начало контейнера
+    $('.container').first().prepend(alertHtml);
+    
+    // Автоматически скрываем через 5 секунд
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+}
 </script>
 {% endblock %}
 

@@ -1,0 +1,496 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Frontend Rules - ProAgentAstana
+
+## Django Frontend Development Guidelines
+
+### Project Structure
+- `templates/` - HTML templates
+- `static/css/` - CSS stylesheets
+- `static/js/` - JavaScript files
+- `static/img/` - Images and media
+- `media/` - User uploaded files
+
+### HTML Templates
+
+#### Base Template Structure (`templates/base.html`)
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}ProAgentAstana - Недвижимость в Астане{% endblock %}">
+    <title>{% block title %}ProAgentAstana{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    {% load static %}
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    {% include 'includes/navbar.html' %}
+    
+    <!-- Main Content -->
+    <main class="container-fluid">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    {% include 'includes/footer.html' %}
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
+```
+
+**Rules:**
+- Always extend from `base.html`
+- Use semantic HTML5 tags
+- Include proper meta tags for SEO
+- Load static files correctly
+- Use Bootstrap 5 as foundation
+
+#### Template Inheritance
+```html
+<!-- templates/main/property_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Объекты недвижимости - ProAgentAstana{% endblock %}
+
+{% block meta_description %}Найдите лучшие объекты недвижимости в Астане{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Объекты недвижимости</h1>
+        
+        {% if properties %}
+            <div class="row">
+                {% for property in properties %}
+                    {% include 'main/includes/property_card.html' with property=property %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Объекты не найдены
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+```
+
+**Rules:**
+- Use descriptive block names
+- Include proper meta descriptions
+- Use template includes for reusable components
+- Handle empty states gracefully
+- Use Django template tags properly
+
+#### Template Includes
+```html
+<!-- templates/main/includes/property_card.html -->
+<div class="col-md-6 col-lg-4 mb-4">
+    <div class="card h-100 property-card">
+        {% if property.main_photo %}
+            <img src="{{ property.main_photo.image.url }}" 
+                 class="card-img-top" 
+                 alt="{{ property.title }}"
+                 loading="lazy">
+        {% endif %}
+        
+        <div class="card-body">
+            <h5 class="card-title">{{ property.title }}</h5>
+            <p class="card-text text-muted">{{ property.address.microdistrict }}</p>
+            <p class="card-text">{{ property.price|floatformat:0 }} ₸</p>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">{{ property.rooms }} комн.</small>
+                <a href="{% url 'main:property_detail' property.pk %}" 
+                   class="btn btn-primary btn-sm">
+                    Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+**Rules:**
+- Use Bootstrap card components
+- Include proper alt text for images
+- Use lazy loading for images
+- Format prices and numbers properly
+- Use semantic class names
+
+### CSS Styling
+
+#### Custom CSS Structure (`static/css/style.css`)
+```css
+/* CSS Variables for consistent theming */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    
+    --border-radius: 0.375rem;
+    --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --transition: all 0.15s ease-in-out;
+}
+
+/* Global Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--dark-color);
+}
+
+/* Custom Components */
+.property-card {
+    transition: var(--transition);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    box-shadow: var(--box-shadow);
+}
+
+.property-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.property-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Form Styling */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Button Customization */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+    .property-card .card-img-top {
+        height: 150px;
+    }
+    
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+```
+
+**Rules:**
+- Use CSS variables for consistent theming
+- Follow BEM methodology for class naming
+- Use responsive design principles
+- Optimize for mobile devices
+- Use semantic color names
+
+#### Bootstrap Customization
+```css
+/* Custom Bootstrap Overrides */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Custom Alert Styles */
+.alert-custom {
+    border-left: 4px solid var(--primary-color);
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Custom Badge Styles */
+.badge-custom {
+    background-color: var(--info-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+}
+```
+
+### JavaScript Guidelines
+
+#### Main JavaScript File (`static/js/main.js`)
+```javascript
+// Main JavaScript file for ProAgentAstana
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all components
+    initializeTooltips();
+    initializeModals();
+    initializeForms();
+    initializeImageGallery();
+});
+
+// Tooltip initialization
+function initializeTooltips() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+// Modal initialization
+function initializeModals() {
+    const modalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="modal"]'));
+    modalTriggerList.map(function (modalTriggerEl) {
+        return new bootstrap.Modal(modalTriggerEl);
+    });
+}
+
+// Form validation and submission
+function initializeForms() {
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+}
+
+// Image gallery functionality
+function initializeImageGallery() {
+    const imageLinks = document.querySelectorAll('.property-image-link');
+    
+    imageLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const imageUrl = this.getAttribute('href');
+            const imageTitle = this.getAttribute('data-title');
+            
+            showImageModal(imageUrl, imageTitle);
+        });
+    });
+}
+
+// Show image in modal
+function showImageModal(imageUrl, title) {
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    
+    modalImage.src = imageUrl;
+    modalTitle.textContent = title;
+    modal.show();
+}
+
+// AJAX utility functions
+const AjaxUtils = {
+    get: function(url, callback) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => callback(null, data))
+            .catch(error => callback(error));
+    },
+    
+    post: function(url, data, callback) {
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => callback(null, data))
+        .catch(error => callback(error));
+    }
+};
+
+// Get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+```
+
+**Rules:**
+- Use modern JavaScript (ES6+)
+- Handle DOM ready events
+- Use Bootstrap JavaScript components
+- Implement proper error handling
+- Use AJAX for dynamic updates
+- Include CSRF token handling
+
+### Responsive Design
+
+#### Mobile-First Approach
+```css
+/* Mobile-first responsive design */
+.container-fluid {
+    padding: 1rem;
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+    .container-fluid {
+        padding: 2rem;
+    }
+}
+
+/* Desktop and up */
+@media (min-width: 992px) {
+    .container-fluid {
+        padding: 3rem;
+    }
+}
+
+/* Large desktop */
+@media (min-width: 1200px) {
+    .container-fluid {
+        padding: 4rem;
+    }
+}
+```
+
+**Rules:**
+- Design for mobile first
+- Use Bootstrap grid system
+- Test on multiple screen sizes
+- Optimize images for different devices
+- Use appropriate font sizes
+
+### Performance Optimization
+
+#### Image Optimization
+```html
+<!-- Use appropriate image formats -->
+<img src="{% static 'img/property.jpg' %}" 
+     alt="Property Image"
+     loading="lazy"
+     width="400"
+     height="300">
+
+<!-- Use srcset for responsive images -->
+<img src="{% static 'img/property-small.jpg' %}"
+     srcset="{% static 'img/property-small.jpg' %} 300w,
+             {% static 'img/property-medium.jpg' %} 600w,
+             {% static 'img/property-large.jpg' %} 900w"
+     sizes="(max-width: 768px) 100vw,
+            (max-width: 1200px) 50vw,
+            33vw"
+     alt="Property Image">
+```
+
+**Rules:**
+- Use lazy loading for images
+- Optimize image sizes
+- Use appropriate image formats (WebP, JPEG, PNG)
+- Implement responsive images
+- Compress images for web
+
+### Accessibility
+
+#### ARIA and Semantic HTML
+```html
+<!-- Use semantic HTML and ARIA attributes -->
+<nav aria-label="Main navigation">
+    <ul role="menubar">
+        <li role="none">
+            <a href="{% url 'main:home' %}" role="menuitem" aria-current="page">Главная</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Form accessibility -->
+<form role="form" aria-labelledby="search-label">
+    <label id="search-label" for="search-input">Поиск недвижимости</label>
+    <input type="search" 
+           id="search-input" 
+           name="search" 
+           aria-describedby="search-help"
+           placeholder="Введите адрес или район">
+    <div id="search-help" class="form-text">
+        Введите адрес, район или название комплекса
+    </div>
+</form>
+```
+
+**Rules:**
+- Use semantic HTML elements
+- Add ARIA attributes where needed
+- Provide proper labels for form elements
+- Ensure keyboard navigation works
+- Test with screen readers
+
+### Code Organization
+
+#### File Structure
+```
+static/
+├── css/
+│   ├── style.css          # Main stylesheet
+│   ├── components.css     # Component-specific styles
+│   └── utilities.css      # Utility classes
+├── js/
+│   ├── main.js           # Main JavaScript file
+│   ├── components.js     # Component-specific scripts
+│   └── utils.js          # Utility functions
+└── img/
+    ├── icons/            # Icon images
+    ├── properties/       # Property images
+    └── ui/              # UI element images
+```
+
+**Rules:**
+- Organize files by type and purpose
+- Use descriptive file names
+- Separate concerns (CSS, JS, images)
+- Keep files modular and reusable
+- Document complex components
+

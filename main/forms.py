@@ -291,22 +291,34 @@ class AnnouncementForm(forms.ModelForm):
             'required': True
         })
     )
+    
+    # Landmarks field - "Дом находится рядом с"
+    landmarks = forms.ModelMultipleChoiceField(
+        queryset=None,  # Will be set in __init__
+        required=False,
+        label="Дом находится рядом с",
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        }),
+        help_text="Выберите достопримечательности рядом с домом"
+    )
 
     class Meta:
         model = Announcement
         fields = [
             'rooms_count', 'price', 'area', 'floor', 'total_floors', 'year_built',
-            'description', 'krisha_link', 'commission_type', 'commission_percentage', 
+            'is_new_building', 'description', 'krisha_link', 'commission_type', 'commission_percentage', 
             'commission_amount', 'commission_bonus'
         ]
         
         widgets = {
             'rooms_count': forms.Select(choices=[(i, f"{i} комнаты" if i != 1 else "1 комната") for i in range(1, 6)], attrs={'class': 'form-select'}),
-            'price': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'price': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Введите цену в тенге'}),  # Изменили на TextInput для поддержки форматирования
             'area': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': 1}),
             'floor': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'total_floors': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'year_built': forms.NumberInput(attrs={'class': 'form-control', 'min': 1900, 'max': 2030}),
+            'is_new_building': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 5,
@@ -321,6 +333,7 @@ class AnnouncementForm(forms.ModelForm):
             'floor': 'Этаж *',
             'total_floors': 'Этажность дома *',
             'year_built': 'Год постройки *',
+            'is_new_building': 'Новостройка',
             'description': 'Описание',  # Убираем звездочку - теперь не обязательное
         }
 
@@ -438,6 +451,16 @@ class AnnouncementForm(forms.ModelForm):
         ).extra(
             select={'is_other': "CASE WHEN LOWER(name) = 'иной' THEN 0 ELSE 1 END"}
         ).order_by('is_other', 'name')
+        
+        # Кэшированный queryset для landmarks
+        landmarks_qs_key = 'announcement_form_landmarks_qs_v2'
+        landmarks_qs = cache.get(landmarks_qs_key)
+        if landmarks_qs is None:
+            landmarks_qs = list(Landmark.objects.all().order_by('name'))
+            cache.set(landmarks_qs_key, landmarks_qs, 3600)
+        self.fields['landmarks'].queryset = Landmark.objects.filter(
+            pk__in=[obj.pk for obj in landmarks_qs]
+        ).order_by('name')
 
     def get_address_data(self):
         """Extract address data from cleaned form data"""
@@ -497,6 +520,34 @@ class AnnouncementForm(forms.ModelForm):
         if complex_name and not complex_name.is_active:
             raise forms.ValidationError("Выберите активный жилой комплекс")
         return complex_name
+    
+    def clean(self):
+        """Общая валидация формы - проверка обязательных полей"""
+        cleaned_data = super().clean()
+        
+        # Список обязательных полей согласно требованиям
+        required_fields = {
+            'rooms_count': 'Количество комнат',
+            'price': 'Цена',
+            'repair_status': 'Ремонт',
+            'building_type': 'Тип дома',
+            'year_built': 'Год постройки',
+            'floor': 'Этаж',
+            'total_floors': 'Этажность дома',
+            'area': 'Площадь',
+            'microdistrict': 'Микрорайон'
+        }
+        
+        errors = {}
+        for field_name, field_label in required_fields.items():
+            if not cleaned_data.get(field_name):
+                errors[field_name] = f"Поле '{field_label}' обязательно для заполнения"
+        
+        if errors:
+            for field, error in errors.items():
+                self.add_error(field, error)
+        
+        return cleaned_data
 
     def save(self, commit=True):
         # Get address data from form fields
