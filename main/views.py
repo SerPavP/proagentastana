@@ -395,11 +395,11 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
         try:
             # Validate photo file sizes first
             photos = self.request.FILES.getlist('photos')
-            max_file_size = 10 * 1024 * 1024  # 10MB
+            max_file_size = 15 * 1024 * 1024  # 15MB
             
             for photo in photos:
                 if photo.size > max_file_size:
-                    messages.error(self.request, f'Файл {photo.name} слишком большой. Максимальный размер: 10MB')
+                    messages.error(self.request, f'Файл {photo.name} слишком большой. Максимальный размер: 15MB')
                     return self.form_invalid(form)
                 
                 if not photo.content_type.startswith('image/'):
@@ -1000,8 +1000,8 @@ def upload_user_photo(request):
             photo_file = request.FILES['photo']
             
             # Валидация файла
-            if photo_file.size > 10 * 1024 * 1024:  # 10MB
-                return JsonResponse({'success': False, 'message': 'Файл слишком большой. Максимальный размер: 10MB'})
+            if photo_file.size > 15 * 1024 * 1024:  # 15MB
+                return JsonResponse({'success': False, 'message': 'Файл слишком большой. Максимальный размер: 15MB'})
             
             if not photo_file.content_type.startswith('image/'):
                 return JsonResponse({'success': False, 'message': 'Файл должен быть изображением'})

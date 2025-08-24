@@ -12,9 +12,8 @@ class PhoneLoginForm(AuthenticationForm):
         max_length=17,
         widget=forms.TextInput(attrs={
             'class': 'form-control phone-mask',
-            'placeholder': '7(XXX)-XXX-XXXX',
-            'autofocus': True,
-            'data-mask': '7(000)-000-0000'
+            'placeholder': '7(123)-123-1233',
+            'autofocus': True
         })
     )
     password = forms.CharField(
@@ -33,7 +32,7 @@ class PhoneLoginForm(AuthenticationForm):
             if phone_digits.startswith('7') and len(phone_digits) == 11:
                 username = '+' + phone_digits
             else:
-                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(XXX)-XXX-XXXX")
+                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(123)-123-1233")
         return username
 
 
@@ -91,18 +90,15 @@ class UserRegistrationForm(forms.ModelForm):
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control phone-mask',
-                'placeholder': '7(XXX)-XXX-XXXX',
-                'data-mask': '7(000)-000-0000'
+                'placeholder': '7(123)-123-1233'
             }),
             'additional_phone': forms.TextInput(attrs={
                 'class': 'form-control phone-mask',
-                'placeholder': '7(XXX)-XXX-XXXX (необязательно)',
-                'data-mask': '7(000)-000-0000'
+                'placeholder': '7(123)-123-1233 (необязательно)'
             }),
             'whatsapp_phone': forms.TextInput(attrs={
                 'class': 'form-control phone-mask',
-                'placeholder': '7(XXX)-XXX-XXXX (необязательно)',
-                'data-mask': '7(000)-000-0000'
+                'placeholder': '7(123)-123-1233 (необязательно)'
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
@@ -127,7 +123,7 @@ class UserRegistrationForm(forms.ModelForm):
             if phone_digits.startswith('7') and len(phone_digits) == 11:
                 phone = '+' + phone_digits
             else:
-                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(XXX)-XXX-XXXX")
+                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(123)-123-1233")
         
         return phone
     
@@ -138,7 +134,7 @@ class UserRegistrationForm(forms.ModelForm):
             if phone_digits.startswith('7') and len(phone_digits) == 11:
                 phone = '+' + phone_digits
             else:
-                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(XXX)-XXX-XXXX")
+                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(123)-123-1233")
         return phone
     
     def clean_whatsapp_phone(self):
@@ -148,7 +144,7 @@ class UserRegistrationForm(forms.ModelForm):
             if phone_digits.startswith('7') and len(phone_digits) == 11:
                 phone = '+' + phone_digits
             else:
-                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(XXX)-XXX-XXXX")
+                raise forms.ValidationError("Пожалуйста, введите номер телефона в формате 7(123)-123-1233")
         return phone
 
 
@@ -250,20 +246,20 @@ class AnnouncementForm(forms.ModelForm):
     
     commission_amount = forms.IntegerField(
         required=False,
-        widget=forms.NumberInput(attrs={
+        widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'min': 0,
-            'style': 'width: 150px; display: inline-block;'
+            'style': 'width: 150px; display: inline-block;',
+            'placeholder': 'Введите сумму'
         }),
         label="Сумма тенге"
     )
     
     commission_bonus = forms.IntegerField(
         required=False,
-        widget=forms.NumberInput(attrs={
+        widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'min': 0,
-            'style': 'width: 150px; display: inline-block;'
+            'style': 'width: 150px; display: inline-block;',
+            'placeholder': 'Введите сумму'
         }),
         label="Доплата тенге"
     )
@@ -480,8 +476,8 @@ class AnnouncementForm(forms.ModelForm):
         """Валидация поля цены"""
         price = self.cleaned_data.get('price')
         if price:
-            # Убираем форматирование (точки)
-            price_str = str(price).replace('.', '').replace(' ', '')
+            # Убираем форматирование (пробелы)
+            price_str = str(price).replace(' ', '')
             try:
                 price_value = int(price_str)
                 if price_value < 0:
@@ -492,6 +488,40 @@ class AnnouncementForm(forms.ModelForm):
             except ValueError:
                 raise forms.ValidationError("Введите корректную цену")
         return price
+
+    def clean_commission_amount(self):
+        """Валидация поля суммы комиссии"""
+        commission_amount = self.cleaned_data.get('commission_amount')
+        if commission_amount:
+            # Убираем форматирование (пробелы)
+            commission_str = str(commission_amount).replace(' ', '')
+            try:
+                commission_value = int(commission_str)
+                if commission_value < 0:
+                    raise forms.ValidationError("Сумма комиссии не может быть отрицательной")
+                if commission_value > 999999999999999:  # 15 цифр максимум
+                    raise forms.ValidationError("Сумма комиссии слишком большая")
+                return commission_value
+            except ValueError:
+                raise forms.ValidationError("Введите корректную сумму комиссии")
+        return commission_amount
+
+    def clean_commission_bonus(self):
+        """Валидация поля доплаты комиссии"""
+        commission_bonus = self.cleaned_data.get('commission_bonus')
+        if commission_bonus:
+            # Убираем форматирование (пробелы)
+            commission_str = str(commission_bonus).replace(' ', '')
+            try:
+                commission_value = int(commission_str)
+                if commission_value < 0:
+                    raise forms.ValidationError("Доплата комиссии не может быть отрицательной")
+                if commission_value > 999999999999999:  # 15 цифр максимум
+                    raise forms.ValidationError("Доплата комиссии слишком большая")
+                return commission_value
+            except ValueError:
+                raise forms.ValidationError("Введите корректную доплату комиссии")
+        return commission_bonus
 
     def clean_repair_status(self):
         """Валидация поля ремонта"""
@@ -513,6 +543,24 @@ class AnnouncementForm(forms.ModelForm):
         if microdistrict and not microdistrict.is_active:
             raise forms.ValidationError("Выберите активный микрорайон")
         return microdistrict
+
+    def clean_krisha_link(self):
+        """Валидация ссылки на Krisha.kz"""
+        krisha_link = self.cleaned_data.get('krisha_link')
+        if krisha_link:
+            # Проверяем, что ссылка содержит krisha.kz
+            if 'krisha.kz' not in krisha_link.lower():
+                raise forms.ValidationError("Ссылка должна быть с сайта Krisha.kz")
+            
+            # Проверяем формат ссылки
+            if not krisha_link.startswith(('http://', 'https://')):
+                raise forms.ValidationError("Ссылка должна начинаться с http:// или https://")
+            
+            # Проверяем длину ссылки
+            if len(krisha_link) > 500:
+                raise forms.ValidationError("Ссылка слишком длинная")
+        
+        return krisha_link
 
     def clean_complex_name(self):
         """Валидация поля жилого комплекса"""

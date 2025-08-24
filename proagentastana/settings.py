@@ -147,7 +147,7 @@ CACHES = {
 
 # Время жизни сессий (для стабильности используем базу данных)
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Используем БД вместо кэша
-SESSION_COOKIE_AGE = 86400  # 24 часа
+SESSION_COOKIE_AGE = 432000  # 5 дней (5 * 24 * 60 * 60 = 432000 секунд)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Сессия не истекает при закрытии браузера
 
 # Password validation
@@ -227,8 +227,10 @@ IMAGE_OPTIMIZATION = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Session settings
-SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_AGE = 432000  # 5 days (5 * 24 * 60 * 60 = 432000 seconds)
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Сессия не истекает при закрытии браузера
+SESSION_COOKIE_SECURE = False  # Для разработки, в продакшене должно быть True
 
 # Login URLs
 LOGIN_URL = '/login/'
@@ -250,7 +252,7 @@ if not DEBUG:
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if config('CSRF_TRUSTED_ORIGINS', default='') else []
 
 # File upload settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024  # 15MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024  # 15MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 

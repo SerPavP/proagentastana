@@ -517,14 +517,25 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function uploadUserPhoto(file) {
-    // Валидация файла
-    if (file.size > 10 * 1024 * 1024) {
-        showToast('Файл слишком большой. Максимальный размер: 10MB', 'error');
+    // Подробная валидация файла
+    const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    
+    // Проверка размера файла
+    if (file.size > 15 * 1024 * 1024) {
+        showToast(`Файл "${file.name}" слишком большой (${fileSizeMB}MB). Максимальный размер: 15MB`, 'error');
         return;
     }
     
+    // Проверка типа файла
     if (!file.type.startsWith('image/')) {
-        showToast('Файл должен быть изображением', 'error');
+        showToast(`Файл "${file.name}" не является изображением`, 'error');
+        return;
+    }
+    
+    // Проверка формата файла
+    if (!allowedTypes.includes(file.type)) {
+        showToast(`Файл "${file.name}" имеет неподдерживаемый формат. Разрешены: JPEG, PNG, GIF, WebP`, 'error');
         return;
     }
     

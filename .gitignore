@@ -5,6 +5,8 @@
 .env.neon
 .env.prod
 .env.test
+env.prod
+env.test
 
 # Database
 *.sqlite3

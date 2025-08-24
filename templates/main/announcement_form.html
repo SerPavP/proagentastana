@@ -312,7 +312,6 @@
                             {{ form.price }}
                                     <span class="input-group-text">₸</span>
                                 </div>
-                                <small class="text-muted">Максимум: 999,999,999,999,999 тенге (15 цифр)</small>
                                 {% if form.price.errors %}
                                     <div class="text-danger small">{{ form.price.errors.0 }}</div>
                             {% endif %}
@@ -447,6 +446,10 @@
                         <!-- Фото -->
                         <div class="mb-4">
                             <label class="form-label">Добавить фото <span style="color: #e91e63;">(обязательно добавьте от 4 до 10 фотографий)</span></label>
+                        <div class="text-muted small mb-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Максимальный размер файла: 15 МБ. Поддерживаемые форматы: JPEG, PNG, GIF, WebP
+                        </div>
                             
                             <!-- Кнопка добавления фото -->
                     <div class="mb-3">
@@ -535,7 +538,7 @@
                                     <label class="form-check-label" for="commission2">
                                         <span style="color: #e91e63;">Я беру с продавца и </span>
                                         <span class="commission-field-wrapper disabled" id="commission-amount-wrapper">
-                                            <input type="number" name="commission_amount" class="form-control" min="0" 
+                                            <input type="text" name="commission_amount" class="form-control" 
                                                    style="width: 200px; height: 45px; display: inline-block; font-size: 16px; font-weight: 500; text-align: center;" 
                                                    id="id_commission_amount" disabled>
                                         </span>
@@ -548,7 +551,7 @@
                                     <label class="form-check-label" for="commission3">
                                         <span style="color: #e91e63;">Я беру с продавца, вы - с покупателя и я дополнительно доплачиваю вам </span>
                                         <span class="commission-field-wrapper disabled" id="commission-bonus-wrapper">
-                                            <input type="number" name="commission_bonus" class="form-control" min="0" 
+                                            <input type="text" name="commission_bonus" class="form-control" 
                                                    style="width: 200px; height: 45px; display: inline-block; font-size: 16px; font-weight: 500; text-align: center;" 
                                                    id="id_commission_bonus" disabled>
                                         </span>
@@ -613,8 +616,8 @@ function formatPrice(input) {
         value = value.substring(0, 15);
     }
     
-    // Добавляем разделители тысяч
-    let formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    // Добавляем разделители тысяч (пробелы вместо точек)
+    let formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     
     // Устанавливаем отформатированное значение
     input.value = formattedValue;
@@ -622,7 +625,7 @@ function formatPrice(input) {
 
 // Функция для получения числового значения из отформатированной строки
 function getNumericValue(formattedValue) {
-    return formattedValue.replace(/\./g, '');
+    return formattedValue.replace(/\s/g, '');
 }
 
 // Валидация формы
@@ -648,27 +651,32 @@ function validateForm() {
 }
 
     // Управление комиссией
-    // Глобальная функция для показа/скрытия полей комиссии
+    // Управление доступностью полей комиссии (отключение вместо скрытия)
     function toggleCommissionFields() {
         const selectedType = document.querySelector('input[name="commission_type"]:checked')?.value;
-        const isEditing = document.querySelector('form').hasAttribute('data-editing');
         const commissionAmount = document.querySelector('input[name="commission_amount"]');
         const commissionBonus = document.querySelector('input[name="commission_bonus"]');
-        
-        if (commissionAmount) {
-            commissionAmount.style.display = selectedType === 'split' ? 'inline-block' : 'none';
-            // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
-            if (selectedType !== 'split' && !isEditing) {
-                commissionAmount.value = '';
-            }
-        }
-        
-        if (commissionBonus) {
-            commissionBonus.style.display = selectedType === 'buyer' ? 'inline-block' : 'none';
-            // При редактировании НЕ очищаем поле, если оно соответствует выбранному типу
-            if (selectedType !== 'buyer' && !isEditing) {
-                commissionBonus.value = '';
-            }
+
+        const makeDisabled = (el, disabled) => {
+            if (!el) return;
+            el.disabled = disabled;
+            el.style.opacity = disabled ? '0.6' : '1';
+            el.style.cursor = disabled ? 'not-allowed' : 'text';
+        };
+
+        // По условиям:
+        // 1) seller → отключить оба
+        // 2) split  → включить commission_amount, отключить commission_bonus
+        // 3) buyer  → включить commission_bonus, отключить commission_amount
+        if (selectedType === 'split') {
+            makeDisabled(commissionAmount, false);
+            makeDisabled(commissionBonus, true);
+        } else if (selectedType === 'buyer') {
+            makeDisabled(commissionAmount, true);
+            makeDisabled(commissionBonus, false);
+        } else { // seller или пусто
+            makeDisabled(commissionAmount, true);
+            makeDisabled(commissionBonus, true);
         }
     }
     
@@ -689,6 +697,42 @@ function validateForm() {
         
         // Инициализируем управление комиссией
         setupCommissionHandling();
+        
+        // Обработка полей цены (основная цена, комиссия)
+        const priceFields = ['price', 'commission_amount', 'commission_bonus'];
+        const form = document.querySelector('form');
+
+        priceFields.forEach(fieldName => {
+            const input = document.querySelector(`input[name="${fieldName}"]`);
+            if (!input) return;
+
+            // Форматирование при вводе
+            input.addEventListener('input', function() {
+                formatPrice(this);
+            });
+
+            // Форматирование при потере фокуса (на всякий случай)
+            input.addEventListener('blur', function() {
+                formatPrice(this);
+            });
+
+            // Форматируем имеющееся значение при загрузке
+            if (input.value) {
+                formatPrice(input);
+            }
+        });
+
+        // Перед отправкой формы снимаем форматирование со всех полей разом
+        if (form) {
+            form.addEventListener('submit', function() {
+                priceFields.forEach(fieldName => {
+                    const input = document.querySelector(`input[name="${fieldName}"]`);
+                    if (input && input.value) {
+                        input.value = getNumericValue(input.value);
+                    }
+                });
+            });
+        }
     
     // Устанавливаем правильное значение для радиокнопок commission_type при редактировании
     {% if form.instance.pk and form.instance.commission_type %}
@@ -716,32 +760,6 @@ function validateForm() {
     }
     {% endif %}
     
-    // Обработка поля цены
-    const priceInput = document.querySelector('input[name="price"]');
-    if (priceInput) {
-        // При редактировании устанавливаем цену из инстанса
-        {% if form.instance.pk and form.instance.price %}
-        priceInput.value = '{{ form.instance.price }}';
-        {% endif %}
-        
-        // Форматируем существующее значение при загрузке
-        if (priceInput.value) {
-            formatPrice(priceInput);
-        }
-        
-        // Форматируем при вводе
-        priceInput.addEventListener('input', function() {
-            formatPrice(this);
-        });
-        
-        // Перед отправкой формы убираем форматирование
-        const form = priceInput.closest('form');
-        if (form) {
-            form.addEventListener('submit', function() {
-                priceInput.value = getNumericValue(priceInput.value);
-            });
-        }
-    }
     const addPhotoBtn = document.getElementById('addPhotoBtn');
     const photoInput = document.getElementById('photoInput');
     const photoContainer = document.getElementById('photoContainer');
@@ -758,27 +776,59 @@ function validateForm() {
     // Обработка выбора файлов
     photoInput.addEventListener('change', function(e) {
         const files = Array.from(e.target.files);
-        const maxFileSize = 10 * 1024 * 1024; // 10MB
+        const maxFileSize = 15 * 1024 * 1024; // 15MB
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         
+        // Массивы для отслеживания результатов проверки
+        const validFiles = [];
+        const invalidFiles = [];
+        
+        // Предварительная проверка всех файлов
         files.forEach(file => {
+            const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+            let isValid = true;
+            let errorMessage = '';
+            
             // Проверка размера файла
             if (file.size > maxFileSize) {
-                alert(`Файл "${file.name}" слишком большой (${(file.size / 1024 / 1024).toFixed(1)}MB). Максимальный размер: 10MB`);
-                return;
+                isValid = false;
+                errorMessage = `Размер файла ${fileSizeMB}MB превышает лимит 15MB`;
             }
-            
             // Проверка типа файла
-            if (!file.type.startsWith('image/')) {
-                alert(`Файл "${file.name}" не является изображением`);
-                return;
+            else if (!file.type.startsWith('image/')) {
+                isValid = false;
+                errorMessage = 'Файл не является изображением';
+            }
+            // Проверка формата файла
+            else if (!allowedTypes.includes(file.type)) {
+                isValid = false;
+                errorMessage = 'Неподдерживаемый формат. Разрешены: JPEG, PNG, GIF, WebP';
             }
             
-            if (!allowedTypes.includes(file.type)) {
-                alert(`Файл "${file.name}" имеет неподдерживаемый формат. Разрешены: JPEG, PNG, GIF, WebP`);
-                return;
+            if (isValid) {
+                validFiles.push(file);
+            } else {
+                invalidFiles.push({
+                    name: file.name,
+                    size: fileSizeMB,
+                    error: errorMessage
+                });
             }
+        });
+        
+        // Показываем предупреждение о неподходящих файлах
+        if (invalidFiles.length > 0) {
+            let warningMessage = 'Следующие файлы не могут быть загружены:\n\n';
+            invalidFiles.forEach(file => {
+                warningMessage += `• ${file.name} (${file.size}MB) - ${file.error}\n`;
+            });
+            warningMessage += '\nЭти файлы будут пропущены.';
             
+            alert(warningMessage);
+        }
+        
+        // Добавляем только валидные файлы
+        validFiles.forEach(file => {
             photoFiles.push(file);
             displayPhoto(file, photoCounter++);
         });
@@ -955,44 +1005,7 @@ function validateForm() {
         }
             });
         
-        // Улучшенная обработка поля цены
-        const priceField = document.getElementById('id_price');
-        if (priceField) {
-            // Разрешаем только цифры и предотвращаем переполнение
-            priceField.addEventListener('input', function(e) {
-                let value = this.value.replace(/[^0-9]/g, ''); // Только цифры
-                
-                // Ограничиваем до 10 цифр (9,999,999,999)
-                if (value.length > 10) {
-                    value = value.slice(0, 10);
-                }
-                
-                // Проверяем, что значение не превышает максимум
-                const numValue = parseInt(value);
-                if (numValue > 9999999999) {
-                    value = '9999999999';
-                }
-                
-                this.value = value;
-            });
-            
-            // Предотвращаем ввод недопустимых символов
-            priceField.addEventListener('keypress', function(e) {
-                // Разрешаем только цифры, backspace, delete, tab, escape, enter
-                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
-                    // Разрешаем Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-                    (e.keyCode === 65 && e.ctrlKey) ||
-                    (e.keyCode === 67 && e.ctrlKey) ||
-                    (e.keyCode === 86 && e.ctrlKey) ||
-                    (e.keyCode === 88 && e.ctrlKey)) {
-                    return;
-                }
-                // Убеждаемся, что это цифра
-                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-                    e.preventDefault();
-                }
-            });
-        }
+        // Обработку поля цены берем общей функцией форматирования (formatPrice) выше
         
         // Управление состоянием полей комиссии
         const commissionRadios = document.querySelectorAll('input[name="commission_type"]');

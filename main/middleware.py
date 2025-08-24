@@ -233,11 +233,15 @@ class UserSessionMiddleware(MiddlewareMixin):
                     
                     # Если сессия уже существует, обновляем время последней активности
                     if not created:
-                        # Можно добавить поле last_activity в модель UserSession
-                        pass
+                        # Продлеваем сессию при активности пользователя
+                        request.session.set_expiry(432000)  # 5 дней
                         
                 except Exception as e:
                     logger.error(f"Ошибка при обработке сессии: {e}")
+            
+            # Продлеваем сессию при любой активности аутентифицированного пользователя
+            if request.user.is_authenticated:
+                request.session.set_expiry(432000)  # 5 дней
         
         return None
 

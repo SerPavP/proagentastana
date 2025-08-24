@@ -118,7 +118,7 @@ def validate_image_file(file):
     errors = []
     
     # Check file size
-    max_size = getattr(settings, 'IMAGE_OPTIMIZATION', {}).get('MAX_FILE_SIZE', 10 * 1024 * 1024)
+    max_size = getattr(settings, 'IMAGE_OPTIMIZATION', {}).get('MAX_FILE_SIZE', 15 * 1024 * 1024)
     if file.size > max_size:
         errors.append(f"File size too large. Maximum size is {format_file_size(max_size)}")
     

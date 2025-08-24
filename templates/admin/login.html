@@ -1,0 +1,169 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .phone-input {
+        font-family: monospace;
+        font-size: 16px;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .phone-input:focus {
+        border-color: #007cba;
+        outline: none;
+        box-shadow: 0 0 0 1px #007cba;
+    }
+    .form-row {
+        margin-bottom: 15px;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .submit-row {
+        margin-top: 20px;
+    }
+    .submit-row input[type="submit"] {
+        background: #007cba;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .submit-row input[type="submit"]:hover {
+        background: #005a87;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    {% if form.errors and not form.non_field_errors %}
+        <p class="errornote">
+            {% blocktrans count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+        </p>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p class="errornote">
+                {{ error }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+        <div class="form-row">
+            {{ form.username.errors }}
+            <label for="id_username">{% trans 'Phone Number:' %}</label>
+            <input type="text" name="username" id="id_username" class="phone-input" 
+                   placeholder="7(123)-123-1233" maxlength="15" required>
+        </div>
+        <div class="form-row">
+            {{ form.password.errors }}
+            <label for="id_password">{% trans 'Password:' %}</label>
+            <input type="password" name="password" id="id_password" required>
+        </div>
+        {% url 'admin_password_reset' as password_reset_url %}
+        {% if password_reset_url %}
+            <div class="password-reset-link">
+                <a href="{{ password_reset_url }}">{% trans 'Forgotten your password?' %}</a>
+            </div>
+        {% endif %}
+        <div class="submit-row">
+            <input type="submit" value="{% trans 'Log in' %}">
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('id_username');
+    
+    // Функция для форматирования номера телефона
+    function formatPhoneNumber(value) {
+        // Удаляем все нецифровые символы
+        const numbers = value.replace(/\D/g, '');
+        
+        // Ограничиваем до 11 цифр (7 + 10 цифр номера)
+        const limitedNumbers = numbers.slice(0, 11);
+        
+        // Форматируем номер
+        if (limitedNumbers.length === 0) {
+            return '';
+        } else if (limitedNumbers.length <= 1) {
+            return limitedNumbers;
+        } else if (limitedNumbers.length <= 4) {
+            return limitedNumbers.slice(0, 1) + '(' + limitedNumbers.slice(1);
+        } else if (limitedNumbers.length <= 7) {
+            return limitedNumbers.slice(0, 1) + '(' + limitedNumbers.slice(1, 4) + ')-' + limitedNumbers.slice(4);
+        } else {
+            return limitedNumbers.slice(0, 1) + '(' + limitedNumbers.slice(1, 4) + ')-' + 
+                   limitedNumbers.slice(4, 7) + '-' + limitedNumbers.slice(7, 11);
+        }
+    }
+    
+    // Обработчик ввода
+    phoneInput.addEventListener('input', function(e) {
+        const cursorPosition = e.target.selectionStart;
+        const oldValue = e.target.value;
+        const newValue = formatPhoneNumber(oldValue);
+        
+        e.target.value = newValue;
+        
+        // Восстанавливаем позицию курсора
+        let newCursorPosition = cursorPosition;
+        
+        // Корректируем позицию курсора с учетом добавленных символов
+        if (newValue.length > oldValue.length) {
+            // Добавились символы форматирования
+            if (cursorPosition === 1 && newValue.length > 1) {
+                newCursorPosition = 2; // После открывающей скобки
+            } else if (cursorPosition === 5 && newValue.length > 5) {
+                newCursorPosition = 7; // После закрывающей скобки и дефиса
+            } else if (cursorPosition === 9 && newValue.length > 9) {
+                newCursorPosition = 10; // После второго дефиса
+            }
+        }
+        
+        e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+    });
+    
+    // Обработчик вставки
+    phoneInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        const formattedValue = formatPhoneNumber(pastedText);
+        this.value = formattedValue;
+    });
+    
+    // Обработчик клавиш
+    phoneInput.addEventListener('keydown', function(e) {
+        // Разрешаем: backspace, delete, tab, escape, enter, стрелки
+        if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+            // Разрешаем Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+            return;
+        }
+        
+        // Разрешаем только цифры
+        if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+            return;
+        }
+        
+        e.preventDefault();
+    });
+});
+</script>
+{% endblock %} 

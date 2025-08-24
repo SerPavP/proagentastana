@@ -45,6 +45,8 @@
     align-items: center;
 }
 
+
+
 /* Grid для 5 фотографий в ряду */
 .photos-grid {
     display: grid;
@@ -79,150 +81,12 @@
         margin-top: 6px;
     }
 }
-
-/* Исправление z-index для dropdown меню */
-.navbar .dropdown-menu {
-    z-index: 9999 !important;
-}
-
-/* Уменьшаем z-index для sticky блока агента */
-.card.sticky-top {
-    z-index: 1020;
-}
-
-/* Убеждаемся что navbar имеет высокий z-index */
-.navbar {
-    z-index: 1030;
-}
-
-/* Стили для кнопки добавления в коллекцию */
-.add-to-collection-btn {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    border: none;
-    color: white;
-    transition: all 0.3s ease;
-}
-
-.add-to-collection-btn:hover {
-    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-    color: white;
-}
-
-.collection-dropdown {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.collection-item {
-    transition: all 0.2s ease;
-}
-
-.collection-item:hover {
-    background-color: #f8f9fa;
-    transform: translateX(5px);
-}
-
-.collection-item.active {
-    background-color: #e3f2fd;
-    border-left: 3px solid #2196f3;
-}
-
-.collection-item {
-    color: #333 !important;
-    text-decoration: none;
-}
-
-.collection-item:hover {
-    background-color: #f8f9fa;
-    transform: translateX(5px);
-    color: #333 !important;
-}
-
-.collection-item.active {
-    background-color: #e3f2fd;
-    border-left: 3px solid #2196f3;
-    color: #333 !important;
-}
-
-.collection-item i {
-    color: #6c757d;
-    margin-right: 8px;
-}
-
-.collection-item.active i {
-    color: #2196f3 !important;
-}
-
-.collection-item .badge {
-    color: white !important;
-}
-
-.collection-name {
-    color: #333 !important;
-    font-weight: 500;
-}
-
-.collection-item.active .collection-name {
-    color: #2196f3 !important;
-    font-weight: 600;
-}
 </style>
 {% endblock %}
 
 {% block content %}
-
 <div class="row">
-    <!-- Property Specifications Column -->
-    <div class="col-lg-2">
-        <div class="d-flex flex-column gap-3">
-            <div class="border rounded p-3 text-center">
-                <i class="bi bi-arrows-angle-expand text-primary" style="font-size: 1.5rem;"></i>
-                <div class="mt-2">
-                    <strong>{{ announcement.area }} м²</strong><br>
-                    <small class="text-muted">Площадь</small>
-                </div>
-            </div>
-            <div class="border rounded p-3 text-center">
-                <i class="bi bi-building text-primary" style="font-size: 1.5rem;"></i>
-                <div class="mt-2">
-                    <strong>
-                        {% if announcement.floor %}
-                            {{ announcement.floor }}
-                            {% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %}
-                        {% else %}
-                            Не указан
-                        {% endif %}
-                    </strong><br>
-                    <small class="text-muted">Этаж</small>
-                </div>
-            </div>
-            <div class="border rounded p-3 text-center">
-                <i class="bi bi-door-open text-primary" style="font-size: 1.5rem;"></i>
-                <div class="mt-2">
-                    <strong>{{ announcement.rooms_count }}</strong><br>
-                    <small class="text-muted">Комнат</small>
-                </div>
-            </div>
-            <div class="border rounded p-3 text-center">
-                <i class="bi bi-calendar text-primary" style="font-size: 1.5rem;"></i>
-                <div class="mt-2">
-                    <strong>
-                        {% if announcement.year_built %}
-                            {{ announcement.year_built }}
-                        {% else %}
-                            Не указан
-                        {% endif %}
-                    </strong><br>
-                    <small class="text-muted">Год постройки</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Photos and Details Column -->
-    <div class="col-lg-6">
+    <div class="col-lg-8">
         <!-- Property Photos -->
         {% if announcement.photos.all %}
             <!-- Главное фото -->
@@ -283,6 +147,76 @@
                     </div>
                 </div>
 
+                <!-- Property Specifications -->
+                <div class="row mb-4">
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-arrows-angle-expand text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>{{ announcement.area }} м²</strong><br>
+                                <small class="text-muted">Площадь</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-building text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>
+                                    {% if announcement.floor %}
+                                        {{ announcement.floor }}
+                                        {% if announcement.total_floors %}/{{ announcement.total_floors }}{% endif %}
+                                    {% else %}
+                                        Не указан
+                                    {% endif %}
+                                </strong><br>
+                                <small class="text-muted">Этаж</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-door-open text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>{{ announcement.rooms_count }}</strong><br>
+                                <small class="text-muted">Комнат</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 text-center mb-3">
+                        <div class="border rounded p-3">
+                            <i class="bi bi-calendar text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                <strong>
+                                    {% if announcement.year_built %}
+                                        {{ announcement.year_built }}
+                                    {% else %}
+                                        Не указан
+                                    {% endif %}
+                                </strong><br>
+                                <small class="text-muted">Год постройки</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-12 text-center mb-3">
+                        <div class="border rounded p-3 h-100">
+                            <i class="bi bi-geo text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="mt-2">
+                                {% if announcement.landmarks.all %}
+                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                        {% for landmark in announcement.landmarks.all %}
+                                            <span class="badge bg-success" style="font-size: 10px;">{{ landmark.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <strong>Не указано</strong>
+                                {% endif %}
+                                <br><small class="text-muted">Дом находится рядом с</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Address and Building Type -->
                 <div class="row mb-4">
                     <div class="col-md-8">
@@ -340,48 +274,59 @@
                             <form method="post" action="{% url 'archive_announcement' announcement.pk %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-warning">
-                                    <i class="bi bi-archive"></i> Архивировать
+                                    <i class="bi bi-archive-fill"></i> Добавить в архив
                                 </button>
                             </form>
                         {% endif %}
-                    {% elif user.is_staff or user.is_superuser %}
-                        <!-- Admin buttons -->
-                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <i class="bi bi-trash"></i> Удалить
-                        </button>
-                    {% endif %}
-                    
-                    {% if user.is_authenticated %}
-                        <!-- Add to Collection button -->
+                    {% elif user.is_authenticated %}
                         <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle add-to-collection-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-bookmark-plus"></i> Добавить в коллекцию
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-bookmark"></i> Добавить в коллекцию
                             </button>
-                            <ul class="dropdown-menu collection-dropdown">
-                                {% if user_collections %}
+                            <ul class="dropdown-menu" id="collectionsDropdown" style="min-width: 250px;">
+                                <div id="existingCollections">
                                     {% for collection in user_collections %}
                                         <li>
-                                            <a class="dropdown-item collection-item {% if collection in announcement_collections %}active{% endif %}" 
-                                               href="#" 
-                                               data-collection-id="{{ collection.id }}"
-                                               data-announcement-id="{{ announcement.id }}">
-                                                <i class="bi bi-bookmark{% if collection in announcement_collections %}-fill text-primary{% endif %}"></i>
-                                                <span class="collection-name">{{ collection.name }}</span>
-                                                {% if collection in announcement_collections %}
-                                                    <span class="badge bg-primary ms-2">✓</span>
-                                                {% endif %}
+                                            <a class="dropdown-item add-to-collection" href="#" 
+                                               data-announcement-id="{{ announcement.pk }}" 
+                                               data-collection-id="{{ collection.pk }}">
+                                                <i class="bi bi-bookmark-fill text-primary"></i> {{ collection.name }}
                                             </a>
                                         </li>
+                                    {% empty %}
+                                        <li><span class="dropdown-item-text text-muted">Нет коллекций</span></li>
                                     {% endfor %}
-                                    <li><hr class="dropdown-divider"></li>
-                                {% endif %}
+                                </div>
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#createCollectionModal">
-                                        <i class="bi bi-plus-circle"></i> Создать новую коллекцию
-                                    </a>
+                                    <div class="px-3 py-2">
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="newCollectionName" 
+                                                   placeholder="Название новой коллекции"
+                                                   maxlength="255">
+                                        </div>
+                                        <button class="btn btn-primary btn-sm w-100" 
+                                                id="createCollectionBtn" 
+                                                data-announcement-id="{{ announcement.pk }}">
+                                            <i class="bi bi-plus-circle"></i> Создать коллекцию
+                                        </button>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
+                        
+                        <!-- Показываем информацию о коллекциях, если объявление уже добавлено -->
+                        {% if announcement_collections %}
+                            <div class="mt-2">
+                                <small class="text-success">
+                                    <i class="bi bi-bookmark-fill"></i> Уже в коллекциях: 
+                                    {% for collection in announcement_collections %}
+                                        <span class="badge bg-success">{{ collection.name }}</span>{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </small>
+                            </div>
+                        {% endif %}
                     {% endif %}
                     
                     <a href="{% url 'announcement_list' %}" class="btn btn-outline-secondary">
@@ -417,24 +362,23 @@
                 <h6>{{ announcement.user.first_name }} {{ announcement.user.last_name }}</h6>
                 <p class="text-muted small">{{ announcement.user.agency.name }}</p>
 
-                <!-- Landmarks Info -->
-                {% if announcement.landmarks.all %}
-                    <div class="mt-3 p-3 bg-light rounded">
-                        <h6 class="mb-2"><i class="bi bi-geo-alt"></i> Рядом</h6>
-                        <div class="row text-start">
-                            {% for landmark in announcement.landmarks.all %}
-                                <div class="col-6 mb-1">
-                                    <small class="text-muted">
-                                        <i class="bi bi-dot"></i> {{ landmark.name }}
-                                        {% if landmark.distance %}
-                                            <br><span class="text-primary">{{ landmark.distance }} м</span>
-                                        {% endif %}
-                                    </small>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
+                <div class="d-grid gap-2">
+                    <a href="tel:{{ announcement.user.phone }}" class="btn btn-primary">
+                        <i class="bi bi-phone"></i> {{ announcement.user.phone }}
+                    </a>
+                    
+                    {% if announcement.user.whatsapp_phone %}
+                        <a href="https://wa.me/{{ announcement.user.whatsapp_phone|cut:'+' }}" class="btn btn-success" target="_blank">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                    {% endif %}
+                    
+                    {% if announcement.user.email %}
+                        <a href="mailto:{{ announcement.user.email }}" class="btn btn-outline-primary">
+                            <i class="bi bi-envelope"></i> Email
+                        </a>
+                    {% endif %}
+                </div>
 
                 <!-- Commission Info -->
                 {% if announcement.commission_type %}
@@ -457,17 +401,6 @@
                 <small class="text-muted">
                     <i class="bi bi-calendar"></i> Опубликовано {{ announcement.created_at|date:"d.m.Y" }}
                 </small>
-                
-                <!-- Collections Info -->
-                {% if announcement_collections %}
-                    <br>
-                    <small class="text-success">
-                        <i class="bi bi-bookmark-fill"></i> В коллекциях: 
-                        {% for collection in announcement_collections %}
-                            <span class="badge bg-success">{{ collection.name }}</span>
-                        {% endfor %}
-                    </small>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -482,62 +415,6 @@
             </div>
             <div class="modal-body text-center p-0">
                 <img id="modalPhoto" src="" alt="Увеличенное фото" class="img-fluid" style="max-height: 80vh; max-width: 100%;">
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Модальное окно для подтверждения удаления -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">
-                    <i class="bi bi-exclamation-triangle text-danger"></i> Подтверждение удаления
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-                <p>Вы действительно хотите удалить это объявление?</p>
-                <p class="text-muted small">Это действие нельзя отменить.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <form method="post" action="{% url 'announcement_delete' announcement.pk %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Удалить
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Модальное окно для создания коллекции -->
-<div class="modal fade" id="createCollectionModal" tabindex="-1" aria-labelledby="createCollectionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createCollectionModalLabel">
-                    <i class="bi bi-plus-circle text-primary"></i> Создать новую коллекцию
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-                <form id="createCollectionForm">
-                    <div class="mb-3">
-                        <label for="collectionName" class="form-label">Название коллекции</label>
-                        <input type="text" class="form-control" id="collectionName" name="name" required maxlength="255" placeholder="Введите название коллекции">
-                        <div class="form-text">Максимум 255 символов</div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-primary" id="createCollectionBtn">
-                    <i class="bi bi-plus-circle"></i> Создать коллекцию
-                </button>
             </div>
         </div>
     </div>
