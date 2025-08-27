@@ -722,7 +722,7 @@ function validateForm() {
             }
         });
 
-        // Перед отправкой формы снимаем форматирование со всех полей разом
+                // Перед отправкой формы снимаем форматирование со всех полей разом
         if (form) {
             form.addEventListener('submit', function() {
                 priceFields.forEach(fieldName => {
@@ -733,8 +733,36 @@ function validateForm() {
                 });
             });
         }
-    
-    // Устанавливаем правильное значение для радиокнопок commission_type при редактировании
+
+        // Нормализация длинных ссылок Krisha.kz на клиенте
+        const krishaInput = document.querySelector('input[name="krisha_link"]');
+        if (krishaInput) {
+            krishaInput.addEventListener('blur', function() {
+                const raw = (this.value || '').trim();
+                if (!raw) return;
+                try {
+                    const url = new URL(raw);
+                    if (!url.hostname.endsWith('krisha.kz')) return;
+                    // Убираем фрагмент
+                    url.hash = '';
+                    // Ограничиваем длину query
+                    if (url.search.length > 1500) {
+                        const params = url.search.substring(1).slice(0, 1500);
+                        url.search = params ? ('?' + params) : '';
+                    }
+                    let out = url.toString();
+                    if (out.length > 2000) {
+                        // Финальная отсечка по длине
+                        out = out.slice(0, 2000);
+                    }
+                    this.value = out;
+                } catch (e) {
+                    // оставляем как есть, серверная валидация подскажет
+                }
+            });
+        }
+ 
+      // Устанавливаем правильное значение для радиокнопок commission_type при редактировании
     {% if form.instance.pk and form.instance.commission_type %}
     const commissionTypeValue = '{{ form.instance.commission_type }}';
     const commissionRadio = document.querySelector(`input[name="commission_type"][value="${commissionTypeValue}"]`);

@@ -113,14 +113,18 @@
                 {% regroup announcement.photos.all by is_main as photos_by_main %}
                 {% for group in photos_by_main %}
                     {% if not group.grouper %}
-                        {% comment %}По 5 фотографий в ряду{% endcomment %}
-                        <div class="photos-grid">
-                            {% for photo in group.list %}
-                                <div class="photo-item">
-                                    <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="photo-thumbnail" alt="Фото недвижимости" data-bs-toggle="modal" data-bs-target="#photoModal" data-photo-src="{{ MEDIA_URL }}{{ photo.file_path }}">
+                        {% comment %}Группируем по 5 фотографий в ряду{% endcomment %}
+                        {% for photo in group.list %}
+                            {% if forloop.counter0|divisibleby:5 %}
+                                <div class="photos-grid">
+                            {% endif %}
+                            <div class="photo-item">
+                                <img src="{{ MEDIA_URL }}{{ photo.file_path }}" class="photo-thumbnail" alt="Фото недвижимости" data-bs-toggle="modal" data-bs-target="#photoModal" data-photo-src="{{ MEDIA_URL }}{{ photo.file_path }}">
+                            </div>
+                            {% if forloop.counter|divisibleby:5 or forloop.last %}
                                 </div>
-                            {% endfor %}
-                        </div>
+                            {% endif %}
+                        {% endfor %}
                     {% endif %}
                 {% endfor %}
             {% endif %}
@@ -218,6 +222,8 @@
                 </div>
 
                 <!-- Address and Building Type -->
+
+
                 <div class="row mb-4">
                     <div class="col-md-8">
                         <h5><i class="bi bi-geo-alt"></i> Адрес</h5>
@@ -300,14 +306,8 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <div class="px-3 py-2">
-                                        <div class="mb-2">
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="newCollectionName" 
-                                                   placeholder="Название новой коллекции"
-                                                   maxlength="255">
-                                        </div>
                                         <button class="btn btn-primary btn-sm w-100" 
-                                                id="createCollectionBtn" 
+                                                id="openCreateCollectionModal" 
                                                 data-announcement-id="{{ announcement.pk }}">
                                             <i class="bi bi-plus-circle"></i> Создать коллекцию
                                         </button>
@@ -396,11 +396,57 @@
                     </div>
                 {% endif %}
 
+                {% comment %} Buttons moved below commission block {% endcomment %}
+                {% if announcement.krisha_link %}
+                <div class="mt-2">
+                    <a href="{{ announcement.krisha_link }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> Ссылка на объявление Krisha.kz
+                    </a>
+                </div>
+                {% endif %}
+                {% if request.user.is_staff or request.user.is_superuser %}
+                <div class="mt-2">
+                    <a href="{% url 'announcement_delete' announcement.id %}" class="btn btn-outline-danger btn-sm"
+                       onclick="return confirm('Удалить это объявление полностью? Действие необратимо.');">
+                        <i class="bi bi-trash"></i> Удалить объявление (для админа)
+                    </a>
+                </div>
+                {% endif %}
+
                 <hr>
                 
                 <small class="text-muted">
                     <i class="bi bi-calendar"></i> Опубликовано {{ announcement.created_at|date:"d.m.Y" }}
                 </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для создания коллекции -->
+<div class="modal fade" id="createCollectionModal" tabindex="-1" aria-labelledby="createCollectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCollectionModalLabel">
+                    <i class="bi bi-plus-circle"></i> Создать новую коллекцию
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="collectionName" class="form-label">Название коллекции</label>
+                    <input type="text" class="form-control" id="collectionName" 
+                           placeholder="Введите название коллекции" maxlength="255">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Отмена
+                </button>
+                <button type="button" class="btn btn-primary" id="createCollectionBtn">
+                    <i class="bi bi-plus-circle"></i> Создать коллекцию
+                </button>
             </div>
         </div>
     </div>
@@ -501,6 +547,11 @@ $(document).ready(function() {
         });
     });
     
+    // Открытие модального окна для создания коллекции
+    $('#openCreateCollectionModal').on('click', function() {
+        $('#createCollectionModal').modal('show');
+    });
+    
     // Обработка создания новой коллекции
     $('#createCollectionBtn').on('click', function() {
         const collectionName = $('#collectionName').val().trim();
@@ -519,7 +570,8 @@ $(document).ready(function() {
             method: 'POST',
             data: {
                 collection_name: collectionName,
-                announcement_id: announcementId
+                announcement_id: announcementId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
             },
             success: function(response) {
                 if (response.success) {
@@ -532,18 +584,16 @@ $(document).ready(function() {
                     // Добавляем новую коллекцию в dropdown
                     const newCollectionItem = `
                         <li>
-                            <a class="dropdown-item collection-item active" href="#" 
+                            <a class="dropdown-item add-to-collection" href="#" 
                                data-collection-id="${response.collection.id}"
                                data-announcement-id="${announcementId}">
-                                <i class="bi bi-bookmark-fill text-primary"></i>
-                                <span class="collection-name">${response.collection.name}</span>
-                                <span class="badge bg-primary ms-2">✓</span>
+                                <i class="bi bi-bookmark-fill text-primary"></i> ${response.collection.name}
                             </a>
                         </li>
                     `;
                     
-                    // Добавляем новую коллекцию в начало списка
-                    $('.collection-dropdown').prepend(newCollectionItem);
+                    // Добавляем новую коллекцию в начало списка существующих коллекций
+                    $('#existingCollections').prepend(newCollectionItem);
                     
                     // Показываем уведомление
                     showNotification(`Коллекция "${response.collection.name}" создана и объявление добавлено!`, 'success');

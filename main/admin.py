@@ -232,8 +232,10 @@ class UserAdmin(BaseUserAdmin):
         sessions = UserSession.objects.filter(user=obj)
         total_duration = sessions.aggregate(total=Sum('duration'))['total']
         if total_duration:
-            hours = total_duration // 3600
-            minutes = (total_duration % 3600) // 60
+            # Преобразуем timedelta в секунды
+            total_seconds = total_duration.total_seconds()
+            hours = int(total_seconds // 3600)
+            minutes = int((total_seconds % 3600) // 60)
             return f"{hours}ч {minutes}м"
         return "0ч 0м"
     get_total_time_on_site.short_description = 'Общее время на сайте'

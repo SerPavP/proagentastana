@@ -3,6 +3,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.validators import RegexValidator
 from .models import User, Agency, Announcement, Collection, Address, Landmark
+from urllib.parse import urlparse, urlunparse
 
 
 class PhoneLoginForm(AuthenticationForm):
@@ -545,22 +546,43 @@ class AnnouncementForm(forms.ModelForm):
         return microdistrict
 
     def clean_krisha_link(self):
-        """Валидация ссылки на Krisha.kz"""
+        """Валидация и нормализация ссылки на Krisha.kz
+        - Принимаем длинные ссылки с параметрами (srchid и т.п.), но ограничиваем общую длину разумно
+        - Нормализуем схему/хост и путь; параметры не обязательны
+        """
         krisha_link = self.cleaned_data.get('krisha_link')
-        if krisha_link:
-            # Проверяем, что ссылка содержит krisha.kz
-            if 'krisha.kz' not in krisha_link.lower():
+        if not krisha_link:
+            return krisha_link
+
+        link = krisha_link.strip()
+
+        # Базовые проверки
+        if 'krisha.kz' not in link.lower():
+            raise forms.ValidationError("Ссылка должна быть с сайта Krisha.kz")
+        if not link.startswith(("http://", "https://")):
+            raise forms.ValidationError("Ссылка должна начинаться с http:// или https://")
+
+        # Глобальный лимит длины URL (поддержим длинные, но защитимся от аномалий)
+        if len(link) > 2000:
+            raise forms.ValidationError("Ссылка слишком длинная (максимум 2000 символов)")
+
+        # Нормализация: убираем фрагмент, чистим пробелы, можем обрезать чрезмерные query-параметры
+        try:
+            parsed = urlparse(link)
+            # Только домен krisha.kz
+            if not parsed.netloc.endswith('krisha.kz'):
                 raise forms.ValidationError("Ссылка должна быть с сайта Krisha.kz")
-            
-            # Проверяем формат ссылки
-            if not krisha_link.startswith(('http://', 'https://')):
-                raise forms.ValidationError("Ссылка должна начинаться с http:// или https://")
-            
-            # Проверяем длину ссылки
-            if len(krisha_link) > 500:
-                raise forms.ValidationError("Ссылка слишком длинная")
-        
-        return krisha_link
+
+            # Оставляем путь как есть (например: /a/show/761000388), query оставляем, но ограничим длину
+            normalized_query = parsed.query
+            if len(normalized_query) > 1500:
+                # Если query слишком длинный, обрежем безопасно
+                normalized_query = normalized_query[:1500]
+
+            normalized = urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', normalized_query, ''))
+            return normalized
+        except Exception:
+            raise forms.ValidationError("Некорректная ссылка Krisha.kz")
 
     def clean_complex_name(self):
         """Валидация поля жилого комплекса"""

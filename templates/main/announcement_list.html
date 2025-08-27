@@ -694,11 +694,44 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="createCollectionBtnMain">
+                    <i class="bi bi-plus-circle"></i> Создать коллекцию
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Модальное окно для создания коллекции -->
+<div class="modal fade" id="createCollectionModalMain" tabindex="-1" aria-labelledby="createCollectionModalMainLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCollectionModalMainLabel">
+                    <i class="bi bi-plus-circle"></i> Создать новую коллекцию
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="collectionNameMain" class="form-label">Название коллекции</label>
+                    <input type="text" class="form-control" id="collectionNameMain" 
+                           placeholder="Введите название коллекции" maxlength="255">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Отмена
+                </button>
+                <button type="button" class="btn btn-primary" id="createCollectionBtnMainModal">
+                    <i class="bi bi-plus-circle"></i> Создать коллекцию
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -907,6 +940,87 @@ $(document).ready(function() {
             }
         }
     }
+    
+    // Обработка кнопки "Создать коллекцию" в модальном окне коллекций
+    $('#createCollectionBtnMain').on('click', function() {
+        $('#collectionModal').modal('hide');
+        $('#createCollectionModalMain').modal('show');
+    });
+    
+    // Обработка создания новой коллекции на главной странице
+    $('#createCollectionBtnMainModal').on('click', function() {
+        const collectionName = $('#collectionNameMain').val().trim();
+        
+        if (!collectionName) {
+            alert('Введите название коллекции');
+            return;
+        }
+        
+        // Отключаем кнопку во время запроса
+        $(this).prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Создание...');
+        
+        $.ajax({
+            url: '/ajax/create-collection/',
+            method: 'POST',
+            data: {
+                collection_name: collectionName,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Закрываем модальное окно создания
+                    $('#createCollectionModalMain').modal('hide');
+                    
+                    // Очищаем форму
+                    $('#collectionNameMain').val('');
+                    
+                    // Добавляем новую коллекцию в список коллекций
+                    const newCollectionButton = `
+                        <button class="btn btn-outline-primary w-100 mb-2 add-to-collection" 
+                                data-collection-id="${response.collection.id}">
+                            ${response.collection.name}
+                        </button>
+                    `;
+                    
+                    // Добавляем новую коллекцию в начало списка
+                    $('#collectionsList').prepend(newCollectionButton);
+                    
+                    // Показываем уведомление
+                    $('<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert">' +
+                      `Коллекция "${response.collection.name}" создана успешно!` +
+                      '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                      '</div>').appendTo('body');
+                    
+                    // Автоматически скрываем через 3 секунды
+                    setTimeout(function() {
+                        $('.alert').alert('close');
+                    }, 3000);
+                } else {
+                    alert('Ошибка: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при создании коллекции');
+            },
+            complete: function() {
+                // Включаем кнопку обратно
+                $('#createCollectionBtnMainModal').prop('disabled', false).html('<i class="bi bi-plus-circle"></i> Создать коллекцию');
+            }
+        });
+    });
+    
+    // Обработка Enter в поле названия коллекции на главной странице
+    $('#collectionNameMain').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            $('#createCollectionBtnMainModal').click();
+        }
+    });
+    
+    // Очистка формы при закрытии модального окна создания коллекции
+    $('#createCollectionModalMain').on('hidden.bs.modal', function() {
+        $('#collectionNameMain').val('');
+        $('#createCollectionBtnMainModal').prop('disabled', false).html('<i class="bi bi-plus-circle"></i> Создать коллекцию');
+    });
 });
 </script>
 {% endblock %}
